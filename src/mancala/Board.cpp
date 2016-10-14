@@ -168,8 +168,8 @@ void Board::makeMove(Side side, size_t holeNo) {
 std::string Board::toString() const {
 	std::stringstream buf;
 
-	buf << "SOUTH SCORE: " << sScore_ << '\n';
 	buf << "NORTH SCORE: " << nScore_ << '\n';
+	buf << "SOUTH SCORE: " << sScore_ << '\n';
 	buf << '\n';
 
 	for(size_t i = 0; i < 6; i++) {
