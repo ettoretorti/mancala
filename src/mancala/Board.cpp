@@ -165,6 +165,11 @@ void Board::makeMove(Side side, size_t holeNo) {
 	}
 }
 
+const uint8_t* Board::validMoves(Side side, size_t& nMoves) const {
+	nMoves = side == SOUTH ? noSMoves_ : noNMoves_;
+	return side == SOUTH ? sMoves_ : nMoves_;
+}
+
 std::string Board::toString() const {
 	std::stringstream buf;
 
