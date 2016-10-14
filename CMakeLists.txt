@@ -7,6 +7,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(BUILD_TESTS "Build the unit tests" ON)
 option(BUILD_BOT "Build the game playing bot" ON)
 
+
+# Build the core mancala files as a library to make it easier to test
+
 file(GLOB_RECURSE LIB_FILES "src/mancala/*.cpp" "src/mancala/*.c")
 
 add_library(mancala STATIC ${LIB_FILES})
@@ -17,6 +20,9 @@ target_compile_options(mancala
     PRIVATE -Wextra
     PRIVATE -pedantic)
 
+
+# Use googletest as our testing framework. If this part of configuring fails
+# make sure you've run 'git submodule init && git submodule update'
 
 if(BUILD_TESTS)
     enable_testing()
@@ -40,6 +46,8 @@ if(BUILD_TESTS)
     add_test(NAME alltests COMMAND alltests)
 endif()
 
+
+# The actual game-playing executable
 
 if(BUILD_BOT)
     file(GLOB_RECURSE BOT_FILES "src/bot/*.cpp" "src/bot/*.c")
