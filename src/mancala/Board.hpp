@@ -5,7 +5,7 @@
 
 enum Side { SOUTH = 0, NORTH = 1 };
 
-class Board {
+class alignas(64) Board {
 public:
 	Board(); //uninitialized by default to save time
 	Board(const Board& o);
