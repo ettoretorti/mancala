@@ -5,7 +5,7 @@
 
 enum Side { SOUTH = 0, NORTH = 1 };
 
-class alignas(64) Board {
+class alignas(32) Board {
 public:
 	Board(); //uninitialized by default to save time
 	Board(const Board& o);
@@ -29,7 +29,7 @@ public:
 	std::string toString() const;
 
 private:
-	//This totals out to 64 bytes (EXACTLY A CACHE LINE)
+	//This totals out to 32 bytes (EXACTLY HALF A CACHE LINE)
 	uint8_t nHoles_[7];
 	uint8_t sHoles_[7];
 	uint8_t sScore_;
