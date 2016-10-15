@@ -31,6 +31,14 @@ Board& Board::operator=(Board&& o) {
 	return *this;
 }
 
+void Board::clear() {
+	for(uint8_t i = 0; i < 7; i++) {
+		nHoles_[i] = sHoles_[i] = 0;
+	}
+	nScore_ = sScore_ = 0;
+	noNMoves_ = noSMoves_ = 0;
+}
+
 void Board::reset() {
 	for(uint8_t i = 0; i < 7; i++) {
 		nHoles_[i] = sHoles_[i] = 7;

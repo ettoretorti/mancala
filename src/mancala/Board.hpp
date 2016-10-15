@@ -13,6 +13,7 @@ public:
 	Board& operator=(const Board& o);
 	Board& operator=(Board&& o);
 
+	void clear();
 	void reset();
 	void recalcMoves();
 	

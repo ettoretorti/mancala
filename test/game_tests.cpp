@@ -2,19 +2,10 @@
 
 #include <mancala/Game.hpp>
 
-void clearBoard(Board& b) {
-	for(int i = 0; i < 7; i++) {
-		b.stonesInHole(NORTH, i) = b.stonesInHole(SOUTH, i) =  0;
-	}
-	b.stonesInWell(NORTH) = b.stonesInWell(SOUTH) = 0;
-
-	b.recalcMoves();
-}
-
 TEST(Game, TestGameOver) {
 	Game g(nullptr, nullptr);
 	Board& b = g.board();
-	clearBoard(b);
+	b.clear();
 
 	ASSERT_TRUE(g.isOver());
 	
