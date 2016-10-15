@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "board_tests.cpp"
 #include "game_tests.cpp"
 
 int main(int argc, char** argv) {
