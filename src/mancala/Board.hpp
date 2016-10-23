@@ -4,6 +4,7 @@
 #include <string>
 
 enum Side { SOUTH = 0, NORTH = 1 };
+enum SpecialMoves { SWITCH = 99 };
 
 class alignas(32) Board {
 public:
@@ -16,7 +17,8 @@ public:
 	void clear();
 	void reset();
 	void recalcMoves();
-	
+	void switchRoles();
+
 	uint8_t stonesInHole(Side side, size_t holeNo) const;
 	uint8_t stonesInWell(Side side) const;
 	
@@ -42,5 +44,8 @@ private:
 	uint8_t noSMoves_;
 
 	void addMove(Side side, size_t holeNo);
+	bool emptyHoleCapture(Side side, Side curSide, uint8_t curHole, uint8_t stonesLeft);
+	void placeAmountInWell(Side side, uint8_t amount);
+	void placeAStone(Side side, Side curSide, uint8_t curHole, uint8_t stonesLeft);
 	void removeMove(Side side, size_t holeNo);
 };

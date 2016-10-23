@@ -117,59 +117,65 @@ void Board::removeMove(Side side, size_t holeNo) {
 	}
 }
 
-void Board::makeMove(Side side, size_t holeNo) {
-	assert(side == SOUTH || side == NORTH);
-	assert(holeNo < 7);
-	assert(side == SOUTH ? sHoles_[holeNo] : nHoles_[holeNo]);
-	
+bool Board::emptyHoleCapture(Side side, Side curSide, uint8_t curHole, uint8_t stonesLeft) {
+	return stonesLeft == 1 && curSide == side && stonesInHole(curSide, curHole) == 0
+			&& stonesInHole(opposite(curSide), 6 - curHole) > 0;
+} 
+
+void Board::placeAStone(Side side, Side curSide, uint8_t curHole, uint8_t stonesLeft){
+	if(emptyHoleCapture(side, curSide, curHole, stonesLeft)){
+		placeAmountInWell(curSide, stonesInHole(opposite(curSide), 6-curHole) + 1);
+		removeMove(opposite(curSide), 6-curHole);
+		stonesInHole(opposite(curSide), 6-curHole) = 0;
+	} else{
+		++stonesInHole(curSide, curHole);
+		if(stonesInHole(curSide, curHole) == 1) {
+			addMove(curSide, curHole);	
+		}
+	}
+}
+
+void Board::placeAmountInWell(Side side, uint8_t amount){
+	if(side == SOUTH)
+		sScore_ += amount;
+	else
+		nScore_ += amount;
+}
+
+void Board::makeMove(Side side, size_t holeNo) {	
 	// ╔> 7 PLAYER HOLES ═> 7 OPPONENT HOLES ═> PLAYER WELL ╗
 	// ╚════════════════════════════════════════════════════╝
 	
 	uint8_t stonesLeft = stonesInHole(side, holeNo);
 	stonesInHole(side, holeNo) = 0;
-	if(stonesLeft < 15) removeMove(side, holeNo);
-	
-	uint8_t prevHole = 7;
-	Side    prevSide = SOUTH;
-	uint8_t curHole  = holeNo == 6 ? 0 : holeNo + 1;
-	Side    curSide  = curHole == 0 ? opposite(side) : side;
+	if(stonesLeft < 15)
+		removeMove(side, holeNo);
 
-	//TODO this is terrible. rewrite with closed form
-	while(stonesLeft > 0) {
-		prevHole = curHole;
-		prevSide = curSide;
+	uint8_t curHole  = holeNo;
+	Side    curSide  = side;
 
-		if(++stonesInHole(curSide, curHole) == 1) {
-			addMove(curSide, curHole);	
+	/*
+		Points to the Well are added if:
+			1. The player is on his side, and has reached the end
+			2. The player adds his last piece in an empty hole
+		In case 2, the player captures the coresponding pieces on his opponents side as well.
+		
+		Keep track of changes in valid moves.
+		Add a stone to the current bucket if no point change
+	*/
+	while(stonesLeft > 0){
+		if(curHole == 6){
+			if(curSide == side)
+				placeAmountInWell(curSide, 1);
+			curHole = 0;
+			curSide = opposite(side);
+			if(curSide == side)
+				placeAStone(side, curSide, curHole, stonesLeft);
+		} else {
+			curHole++;
+			placeAStone(side, curSide, curHole, stonesLeft);
 		}
-
-		if(++curHole > 6) {
-			if(curSide == side) {
-				curHole = 0;
-				curSide = opposite(side);
-			} else if(stonesLeft > 1) {
-				if(side == SOUTH) {
-					sScore_++;
-				} else {
-					nScore_++;
-				}
-				stonesLeft--;
-
-				curSide = side;
-				curHole = 0;
-			}
-		}
-
 		stonesLeft--;
-	}
-
-	//check for capture
-	if(prevHole != 7 && prevSide == side && stonesInHole(side, prevHole) == 1) {
-		stonesInWell(side) += 1 + stonesInHole(opposite(side), 6 - prevHole);
-		stonesInHole(side, prevHole) = 0;
-		stonesInHole(opposite(side), 6 - prevHole) = 0;
-		removeMove(side, prevHole);
-		removeMove(opposite(side), 6 - prevHole);
 	}
 }
 

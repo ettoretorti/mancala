@@ -17,6 +17,12 @@ public:
 	Side& toMove();
 	Side toMove() const;
 
+	Side& p1Side();
+	Side p1Side() const;
+
+	Side& p2Side();
+	Side p2Side() const;
+
 	void reset();
 
 	bool isOver() const;
@@ -28,4 +34,6 @@ private:
 	std::unique_ptr<Agent> p1_;
 	std::unique_ptr<Agent> p2_;
 	Side toMove_;
+	Side p1Side_;
+	Side p2Side_;
 };
