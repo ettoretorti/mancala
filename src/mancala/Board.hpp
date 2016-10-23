@@ -17,7 +17,6 @@ public:
 	void clear();
 	void reset();
 	void recalcMoves();
-	void switchRoles();
 
 	uint8_t stonesInHole(Side side, size_t holeNo) const;
 	uint8_t stonesInWell(Side side) const;
