@@ -20,14 +20,6 @@ const Board& Game::board() const {
 	return board_;
 }
 
-Side& Game::p1Side() {
-	return p1Side_;
-}
-
-Side& Game::p2Side() {
-	return p2Side_;
-}
-
 Side Game::p1Side() const {
 	return p1Side_;
 }
@@ -77,8 +69,8 @@ void Game::stepTurn() {
 			}
 			assert(moveValid);
 		#endif
-		board_.makeMove(toMove_, move);
-		toMove_ = (Side)((int)toMove_^1);
+		if(!board_.makeMove(toMove_, move))
+			toMove_ = (Side)((int)toMove_^1);
 	}
 }
 

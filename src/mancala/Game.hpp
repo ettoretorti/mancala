@@ -17,10 +17,7 @@ public:
 	Side& toMove();
 	Side toMove() const;
 
-	Side& p1Side();
 	Side p1Side() const;
-
-	Side& p2Side();
 	Side p2Side() const;
 
 	void reset();

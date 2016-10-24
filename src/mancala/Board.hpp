@@ -24,7 +24,7 @@ public:
 	uint8_t& stonesInHole(Side side, size_t holeNo);
 	uint8_t& stonesInWell(Side side);
 
-	void makeMove(Side side, size_t holeNo);
+	bool makeMove(Side side, size_t holeNo);
 
 	const uint8_t* validMoves(Side side, size_t& nMoves) const;
 
@@ -43,8 +43,6 @@ private:
 	uint8_t noSMoves_;
 
 	void addMove(Side side, size_t holeNo);
-	bool emptyHoleCapture(Side side, Side curSide, uint8_t curHole, uint8_t stonesLeft);
-	void placeAmountInWell(Side side, uint8_t amount);
-	void placeAStone(Side side, Side curSide, uint8_t curHole, uint8_t stonesLeft);
+	void placeAStone(Side curSide, uint8_t curHole);
 	void removeMove(Side side, size_t holeNo);
 };
