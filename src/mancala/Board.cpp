@@ -146,7 +146,7 @@ bool Board::makeMove(Side side, size_t holeNo) {
 		Keep track of changes in valid moves.
 		Add a stone to the current bucket if no point change
 	*/
-	if(stonesLeft > 15){
+	if(stonesLeft > 15) {
 		uint8_t iterationsNum = stonesLeft % 15;
 		uint8_t perHole = stonesLeft / 15;
 
@@ -164,18 +164,19 @@ bool Board::makeMove(Side side, size_t holeNo) {
 				if(curSide == side){
 					++stonesInWell(curSide);
 					stonesLeft--;
+
+					goAgain = stonesLeft == 0;
 				}
+
 				curHole = 0;
-				curSide = opposite(side);
+				curSide = opposite(curSide);
+
 				if(stonesLeft > 0){
 					++stonesInHole(curSide, curHole);
 					stonesLeft--;
-				} else {
-					goAgain = true;
 				}
 			} else {
-				curHole++;
-				++stonesInHole(curSide, curHole);
+				++stonesInHole(curSide, ++curHole);
 				stonesLeft--;
 			}
 		}
@@ -185,21 +186,23 @@ bool Board::makeMove(Side side, size_t holeNo) {
 				if(curSide == side){
 					++stonesInWell(curSide);
 					stonesLeft--;
+
+					goAgain = stonesLeft == 0;
 				}
+
 				curHole = 0;
-				curSide = opposite(side);
+				curSide = opposite(curSide);
+
 				if(stonesLeft > 0){
 					placeAStone(curSide, curHole);
 					stonesLeft--;
-				} else {
-					goAgain = true;
 				}
 			} else {
-				curHole++;
-				placeAStone(curSide, curHole);
+				placeAStone(curSide, ++curHole);
 				stonesLeft--;
 			}
 		}
+
 		// Empty Hole Capture
 		if(curSide == side && stonesInHole(curSide, curHole) == 1
 				&& stonesInHole(opposite(curSide), 6 - curHole) > 0){
@@ -209,7 +212,6 @@ bool Board::makeMove(Side side, size_t holeNo) {
 
 			stonesInHole(opposite(curSide), 6-curHole) = 0;
 			stonesInHole(curSide, curHole) = 0;
-			goAgain = true;
 		}
 	}
 
