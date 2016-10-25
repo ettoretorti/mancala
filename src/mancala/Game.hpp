@@ -17,20 +17,26 @@ public:
 	Side& toMove();
 	Side toMove() const;
 
-	Side p1Side() const;
-	Side p2Side() const;
-
 	void reset();
 
 	bool isOver() const;
+	bool sidesSwapped() const;
+	bool& sidesSwapped();
+
+	size_t movesPlayed() const;
 
 	void stepTurn();
 	void playAll();
+
+	/// p1 score - p2 score
+	/// only to be called when isOver() returns true
+	int scoreDifference();
+
 private:
 	Board board_;
 	std::unique_ptr<Agent> p1_;
 	std::unique_ptr<Agent> p2_;
 	Side toMove_;
-	Side p1Side_;
-	Side p2Side_;
+	size_t movesPlayed_;
+	bool sidesSwapped_;
 };

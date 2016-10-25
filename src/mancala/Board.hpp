@@ -4,7 +4,6 @@
 #include <string>
 
 enum Side { SOUTH = 0, NORTH = 1 };
-enum SpecialMoves { SWITCH = 99 };
 
 class alignas(32) Board {
 public:

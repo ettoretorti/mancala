@@ -4,12 +4,13 @@
 
 Game::Game(std::unique_ptr<Agent> p1, std::unique_ptr<Agent> p2)
 	: board_(), p1_(std::move(p1)), p2_(std::move(p2)), toMove_(SOUTH),
-	  p1Side_(SOUTH), p2Side_(NORTH)
+	  movesPlayed_(0), sidesSwapped_(false)
 {}
 
 
 Game::Game(Agent* p1, Agent* p2)
-	: board_(), p1_(p1), p2_(p2), toMove_(SOUTH), p1Side_(SOUTH), p2Side_(NORTH)
+	: board_(), p1_(p1), p2_(p2), toMove_(SOUTH), movesPlayed_(0),
+	  sidesSwapped_(false)
 {}
 
 Board& Game::board() {
@@ -20,12 +21,12 @@ const Board& Game::board() const {
 	return board_;
 }
 
-Side Game::p1Side() const {
-	return p1Side_;
+bool Game::sidesSwapped() const {
+	return sidesSwapped_;
 }
 
-Side Game::p2Side() const {
-	return p2Side_;
+bool& Game::sidesSwapped() {
+	return sidesSwapped_;
 }
 
 Side& Game::toMove() {
@@ -39,8 +40,8 @@ Side Game::toMove() const {
 void Game::reset() {
 	board_.reset();
 	toMove_ = SOUTH;
-	p1Side_ = SOUTH;
-	p2Side_ = NORTH;
+	movesPlayed_ = 0;
+	sidesSwapped_ = false;
 }
 
 bool Game::isOver() const {
@@ -53,12 +54,17 @@ bool Game::isOver() const {
 void Game::stepTurn() {
 	assert(!isOver());
 
-	uint8_t move = toMove_ == p1Side_ ? p1_->makeMove(board_, p1Side_)
-	                                : p2_->makeMove(board_, p2Side_);
+	bool canSwitch = movesPlayed_ == 1;
 
-	if(move == SWITCH){
-		p1Side_ = p1Side_ == SOUTH? NORTH : SOUTH;
-		p2Side_ = p2Side_ == SOUTH? NORTH : SOUTH;	
+	uint8_t move = toMove_ == SOUTH && !sidesSwapped_ ? p1_->makeMove(board_, toMove_, canSwitch) :
+	               toMove_ == NORTH && !sidesSwapped_ ? p2_->makeMove(board_, toMove_, canSwitch) :
+	               toMove_ == SOUTH &&  sidesSwapped_ ? p2_->makeMove(board_, toMove_, canSwitch) :
+	                                                    p1_->makeMove(board_, toMove_, canSwitch);
+
+	assert(canSwitch || move < 7);
+
+	if(canSwitch && move >= 7) {
+		sidesSwapped_ = true;
 	} else {
 		#ifndef NDEBUG
 			size_t nMoves;
@@ -69,11 +75,28 @@ void Game::stepTurn() {
 			}
 			assert(moveValid);
 		#endif
-		if(!board_.makeMove(toMove_, move))
+		if(!board_.makeMove(toMove_, move) || movesPlayed_ == 0)
 			toMove_ = (Side)((int)toMove_^1);
 	}
+
+	movesPlayed_++;
 }
 
 void Game::playAll() {
 	while(!isOver()) stepTurn();
+}
+
+int Game::scoreDifference() {
+	assert(isOver());
+
+	//clean up the board by giving the winning player all the remaining stones
+	Side winner = (Side)((int)toMove_^1);
+
+	for(size_t i = 0; i < 7; i++) {
+		board_.stonesInWell(winner) += board_.stonesInHole(winner, i);
+		board_.stonesInHole(winner, i) = 0;
+	}
+
+	return board_.stonesInWell(!sidesSwapped_ ? SOUTH : NORTH)
+	       - board_.stonesInWell(!sidesSwapped_ ? NORTH : SOUTH);
 }
