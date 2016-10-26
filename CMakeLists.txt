@@ -6,6 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(BUILD_TESTS "Build the unit tests" ON)
 option(BUILD_BOT "Build the game playing bot" ON)
+option(BUILD_ARENA "Build the agent arena" ON)
 
 
 # Build the core mancala files as a library to make it easier to test
@@ -56,5 +57,18 @@ if(BUILD_BOT)
     target_link_libraries(bot mancala)
     target_include_directories(
         bot
+        PRIVATE ${CMAKE_SOURCE_DIR}/src)
+endif()
+
+
+# Agent wars
+
+if(BUILD_ARENA)
+    file(GLOB_RECURSE ARENA_FILES "src/arena/*.cpp" "src/arena/*.c")
+
+    add_executable(arena ${ARENA_FILES})
+    target_link_libraries(arena mancala)
+    target_include_directories(
+        arena
         PRIVATE ${CMAKE_SOURCE_DIR}/src)
 endif()
