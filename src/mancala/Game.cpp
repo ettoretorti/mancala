@@ -51,6 +51,10 @@ bool Game::isOver() const {
 	return nValidMoves == 0;
 }
 
+size_t Game::movesPlayed() const {
+	return movesPlayed_;
+}
+
 void Game::stepTurn() {
 	assert(!isOver());
 
