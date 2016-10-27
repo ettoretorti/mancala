@@ -17,6 +17,7 @@ public:
 	void reset();
 	void recalcMoves();
 
+	uint8_t totalStones(Side side) const;
 	uint8_t stonesInHole(Side side, size_t holeNo) const;
 	uint8_t stonesInWell(Side side) const;
 	
@@ -24,6 +25,7 @@ public:
 	uint8_t& stonesInWell(Side side);
 
 	bool makeMove(Side side, size_t holeNo);
+	bool undoMove(Side side, size_t holeNo, uint8_t prevScore, uint8_t stones);
 
 	const uint8_t* validMoves(Side side, size_t& nMoves) const;
 
@@ -40,8 +42,12 @@ private:
 	uint8_t sMoves_[7];
 	uint8_t noNMoves_;
 	uint8_t noSMoves_;
+	
+	uint8_t totalNStones_;
+	uint8_t totalSStones_;
 
 	void addMove(Side side, size_t holeNo);
 	void placeAStone(Side curSide, uint8_t curHole);
 	void removeMove(Side side, size_t holeNo);
+	void removeAStone(Side curSide, uint8_t curHole);
 };

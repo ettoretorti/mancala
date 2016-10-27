@@ -46,6 +46,8 @@ void Board::reset() {
 	}
 	nScore_ = sScore_ = 0;
 	noNMoves_ = noSMoves_ = 7;
+	totalNStones_ = 49;
+	totalSStones_ = 49;
 }
 
 void Board::recalcMoves() {
@@ -66,6 +68,12 @@ uint8_t Board::stonesInHole(Side side, size_t holeNo) const {
 	assert(holeNo < 7);
 
 	return side == SOUTH ? sHoles_[holeNo] : nHoles_[holeNo];
+}
+
+uint8_t Board::totalStones(Side side) const {
+	assert(side == SOUTH || side == NORTH);
+	
+	return side == SOUTH ? totalNStones_ : totalSStones_;
 }
 
 uint8_t Board::stonesInWell(Side side) const {
@@ -107,6 +115,7 @@ void Board::removeMove(Side side, size_t holeNo) {
 	
 	uint8_t* arr    = side == SOUTH ? sMoves_ : nMoves_;
 	uint8_t& nMoves = side == SOUTH ? noSMoves_ : noNMoves_;
+	arr[holeNo] = arr[nMoves-1];
 
 	for(uint8_t i = 0; i < nMoves; i++) {
 		if(arr[i] == holeNo) {
@@ -122,6 +131,114 @@ void Board::placeAStone(Side curSide, uint8_t curHole){
 	if(stonesInHole(curSide, curHole) == 1) {
 		addMove(curSide, curHole);	
 	}
+}
+
+void Board::removeAStone(Side curSide, uint8_t curHole){
+	--stonesInHole(curSide, curHole);
+	if(stonesInHole(curSide, curHole) == 0) {
+		removeMove(curSide, curHole);	
+	}
+}
+
+bool Board::undoMove(Side side, size_t holeNo, uint8_t prevScore, uint8_t stones) {	
+	// ╔> 7 PLAYER HOLES ═> PLAYER WELL ═> 7 OPPONENT HOLES ╗
+	// ╚════════════════════════════════════════════════════╝
+
+	stonesInHole(side, holeNo) = stones;
+	if(stones < 15)
+		addMove(side, holeNo);
+
+	uint8_t curHole  = holeNo;
+	Side    curSide  = side;
+	bool goAgain = false;
+
+	if(stones > 15) {
+		uint8_t iterationsNum = stones % 15;
+		uint8_t perHole = stones / 15;
+
+		for(uint8_t i = 0; i < holeNo; i++) {
+			stonesInHole(curSide, i) -= perHole;
+			stonesInHole(opposite(curSide), i) -= perHole;
+			if(stonesInHole(curSide,i) == 0){
+				removeMove(curSide, i);
+			} 
+			if(stonesInHole(opposite(curSide),i) == 0){
+				removeMove(opposite(curSide), i);	
+			}
+		}
+		for(uint8_t i = holeNo+1; i < 7; i++) {
+			stonesInHole(curSide, i) -= perHole;
+			stonesInHole(opposite(curSide), i) -= perHole;
+			if(stonesInHole(curSide,i) == 0){
+				removeMove(curSide, i);
+			}
+			if(stonesInHole(opposite(curSide),i) == 0){
+				removeMove(opposite(curSide), i);	
+			}
+		}
+
+		stonesInWell(curSide) -= perHole;
+		uint8_t stonesLeft = iterationsNum;
+		// we cannot have empty capture as we already filled all holes
+		while(stonesLeft > 0){
+			if(curHole == 6){
+				if(curSide == side){
+					--stonesInWell(curSide);
+					stonesLeft--;
+
+					goAgain = stonesLeft == 0;
+				}
+
+				curHole = 0;
+				curSide = opposite(curSide);
+
+				if(stonesLeft > 0){
+					--stonesInHole(curSide, curHole);
+					stonesLeft--;
+				}
+			} else {
+				--stonesInHole(curSide, ++curHole);
+				stonesLeft--;
+			}
+		}
+	} else {
+		while(stones > 1){
+			if(curHole == 6){
+				if(curSide == side){
+					--stonesInWell(curSide);
+					stones--;
+				}
+
+				curHole = 0;
+				curSide = opposite(curSide);
+
+				if(stones > 0){
+					removeAStone(curSide, curHole);
+					stones--;
+				}
+			} else {
+				removeAStone(curSide, ++curHole);
+				stones--;
+			}
+		}
+
+		if(curHole < 6)
+			++curHole;
+		else{
+			curHole = 0;
+			curSide = opposite(curSide);
+		}
+
+		// Empty Hole Capture
+		if(stonesInHole(curSide, curSide) == 0){
+			stonesInHole(opposite(curSide), 6-curHole) += (stonesInWell(curSide) - prevScore);	
+			addMove(opposite(curSide), 6-curHole);
+			stonesInWell(curSide) -= (stonesInHole(opposite(curSide), 6-curHole) + 1);
+		} else{
+			removeAStone(curSide, curHole);
+		}
+	}
+	return goAgain;
 }
 
 bool Board::makeMove(Side side, size_t holeNo) {	
