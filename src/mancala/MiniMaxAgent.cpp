@@ -10,7 +10,7 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, bool canSwitch) {
 			return -1;
 	}
 	uint8_t depth = 5; // SOME DEPTH
-	return moves[minimax(depth, s, b, moves)];
+	return moves[minimax(depth, depth, s, b, moves)];
 }
 
 uint8_t MiniMaxAgent::minimax(uint8_t depth, uint8_t curDepth, Side s, const Board& b, auto* moves){
