@@ -115,7 +115,6 @@ void Board::removeMove(Side side, size_t holeNo) {
 	
 	uint8_t* arr    = side == SOUTH ? sMoves_ : nMoves_;
 	uint8_t& nMoves = side == SOUTH ? noSMoves_ : noNMoves_;
-	arr[holeNo] = arr[nMoves-1];
 
 	for(uint8_t i = 0; i < nMoves; i++) {
 		if(arr[i] == holeNo) {
