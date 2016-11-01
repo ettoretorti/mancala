@@ -27,6 +27,8 @@ uint8_t UserAgent::makeMove(const Board& b, Side s, bool canSwitch) {
 			done = true;
 		}
 	}
+	move -= '0';
+	cout << "Picked " << move << std::endl;
 
 	return move;
 }
