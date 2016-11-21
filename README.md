@@ -28,7 +28,7 @@ make
 2. Training Data
 
 #### Method
-Our Agent will play itself for a very large number of games. We will use the results of those games and moves associated to create the opening table. The Closing table will be generated from brute for search.
+Our Agent will play itself for a very large number of games (reinforcement learning) . We will use the results of those games and moves associated to create the opening table. The Closing table will be generated from brute force search.
 
 The rest of the playable game will be done using a combination of Minimax, Monte Carlo Search, Alpha-Beta Pruning, Precomputed Tables and Heuristics.
 
