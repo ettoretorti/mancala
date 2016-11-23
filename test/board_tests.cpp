@@ -86,7 +86,7 @@ TEST(Board, ValidMoves) {
 	EXPECT_EQ(1u, nMoves);
 	EXPECT_EQ(0u, moves[0]);
 
-	moves = b.validMoves(SOUTH, nMoves);
+	b.validMoves(SOUTH, nMoves);
 	EXPECT_EQ(0u, nMoves);
 
 	
@@ -99,7 +99,7 @@ TEST(Board, ValidMoves) {
 	EXPECT_EQ(1u, nMoves);
 	EXPECT_EQ(0u, moves[0]);
 
-	moves = b.validMoves(NORTH, nMoves);
+	b.validMoves(NORTH, nMoves);
 	EXPECT_EQ(0u, nMoves);
 
 	
@@ -168,11 +168,11 @@ TEST(Board, SmallMove) {
 	}
 
 	size_t nMoves;
-	const uint8_t* moves = b.validMoves(SOUTH, nMoves);
+	b.validMoves(SOUTH, nMoves);
 
 	EXPECT_EQ(0u, nMoves);
 
-	moves = b.validMoves(NORTH, nMoves);
+	const uint8_t* moves = b.validMoves(NORTH, nMoves);
 	EXPECT_EQ(1u, nMoves);
 
 	EXPECT_EQ(0u, moves[0]);
@@ -205,11 +205,11 @@ TEST(Board, LastStoneInWell) {
 	}
 
 	size_t nMoves;
-	const uint8_t* moves = b.validMoves(SOUTH, nMoves);
+	b.validMoves(SOUTH, nMoves);
 
 	EXPECT_EQ(0u, nMoves);
 
-	moves = b.validMoves(NORTH, nMoves);
+	const uint8_t* moves = b.validMoves(NORTH, nMoves);
 	EXPECT_EQ(6u, nMoves);
 
 	bool movesAvail[7] = { 0 };
