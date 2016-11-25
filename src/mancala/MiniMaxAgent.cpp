@@ -2,19 +2,21 @@
 
 #include <cassert>
 
-static uint8_t minimax(uint8_t depth, Side s, const Board& b, uint8_t nMoves);
+static uint8_t minimax(uint8_t depth, Side s, const Board& b);
 uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, bool canSwitch) {
 	size_t nMoves;
 	auto* moves = b.validMoves(s, nMoves);
 	assert(nMoves > 0);
 
 	uint8_t depth = 5; // SOME DEPTH
-	return moves[minimax(depth, s, b, nMoves)];
+	return moves[minimax(depth, s, b)];
 }
 
-static uint8_t minimax(uint8_t depth, Side s, const Board& b, size_t& nMoves){
+static uint8_t minimax(uint8_t depth, Side s, const Board& b){
 	// TODO: ACCOUNT FOR SWITCHES
 	Side& toMove = s;
+	size_t nMoves;
+
 	if(s == SOUTH){
 		auto* moves = b.validMoves(s, nMoves);
 		uint8_t maxScore = 0;
@@ -24,7 +26,7 @@ static uint8_t minimax(uint8_t depth, Side s, const Board& b, size_t& nMoves){
 			bool goAgain = bCopy.makeMove(s, moves[i]);
 			if(!goAgain)
 				toMove = (Side)((int)s ^ 1);
-			uint8_t bestMove = minimax(depth, toMove, bCopy, nMoves);
+			uint8_t bestMove = minimax(depth, toMove, bCopy);
 			if(bestMove > maxScore){
 				maxScore = bestMove;
 				bestMoveIndex = i;
@@ -42,7 +44,7 @@ static uint8_t minimax(uint8_t depth, Side s, const Board& b, size_t& nMoves){
 			bool goAgain = bCopy.makeMove(s, moves[i]);
 			if(!goAgain)
 				toMove = (Side)((int)s ^ 1);
-			uint8_t bestMove = minimax(depth-1, toMove, bCopy, nMoves);
+			uint8_t bestMove = minimax(depth-1, toMove, bCopy);
 			if(bestMove < minScore){
 				minScore = bestMove;
 				bestMoveIndex = i;
