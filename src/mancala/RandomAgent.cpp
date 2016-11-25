@@ -2,8 +2,7 @@
 
 #include <random>
 
-
-static thread_local std::default_random_engine gen(std::random_device{}());
+static /*thread_local*/ std::default_random_engine gen(std::random_device{}());
 
 uint8_t RandomAgent::makeMove(const Board& b, Side s, bool canSwitch) {
 	// 1/8 chance of switching when possible, since there will always be 7 other moves

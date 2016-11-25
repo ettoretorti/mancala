@@ -25,7 +25,6 @@ public:
 	uint8_t& stonesInWell(Side side);
 
 	bool makeMove(Side side, size_t holeNo);
-	bool undoMove(Side side, size_t holeNo, uint8_t prevScore, uint8_t stones);
 
 	const uint8_t* validMoves(Side side, size_t& nMoves) const;
 
