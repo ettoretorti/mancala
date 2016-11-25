@@ -46,8 +46,6 @@ void Board::reset() {
 	}
 	nScore_ = sScore_ = 0;
 	noNMoves_ = noSMoves_ = 7;
-	totalNStones_ = 49;
-	totalSStones_ = 49;
 }
 
 void Board::recalcMoves() {
@@ -72,8 +70,15 @@ uint8_t Board::stonesInHole(Side side, size_t holeNo) const {
 
 uint8_t Board::totalStones(Side side) const {
 	assert(side == SOUTH || side == NORTH);
-	
-	return side == SOUTH ? totalNStones_ : totalSStones_;
+
+	const uint8_t* arr = (side == SOUTH) ? sHoles_ : nHoles_;
+
+	uint8_t acc = arr[0];
+	for(size_t i = 1; i < 7; i++) {
+		acc += arr[i];
+	}
+
+	return acc;
 }
 
 uint8_t Board::stonesInWell(Side side) const {
