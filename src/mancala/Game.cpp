@@ -60,10 +60,10 @@ void Game::stepTurn() {
 
 	bool canSwitch = movesPlayed_ == 1;
 
-	uint8_t move = toMove_ == SOUTH && !sidesSwapped_ ? p1_->makeMove(board_, toMove_, canSwitch) :
-	               toMove_ == NORTH && !sidesSwapped_ ? p2_->makeMove(board_, toMove_, canSwitch) :
-	               toMove_ == SOUTH &&  sidesSwapped_ ? p2_->makeMove(board_, toMove_, canSwitch) :
-	                                                    p1_->makeMove(board_, toMove_, canSwitch);
+	uint8_t move = toMove_ == SOUTH && !sidesSwapped_ ? p1_->makeMove(board_, toMove_, movesPlayed_, lastMove_) :
+	               toMove_ == NORTH && !sidesSwapped_ ? p2_->makeMove(board_, toMove_, movesPlayed_, lastMove_) :
+	               toMove_ == SOUTH &&  sidesSwapped_ ? p2_->makeMove(board_, toMove_, movesPlayed_, lastMove_) :
+	                                                    p1_->makeMove(board_, toMove_, movesPlayed_, lastMove_);
 
 	assert(canSwitch || move < 7);
 
@@ -83,6 +83,7 @@ void Game::stepTurn() {
 			toMove_ = (Side)((int)toMove_^1);
 	}
 
+	lastMove_ = move;
 	movesPlayed_++;
 }
 

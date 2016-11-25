@@ -6,7 +6,7 @@
 static std::pair<uint8_t,double> minimax(uint8_t depth, uint8_t index, Side s, const Board& b);
 static uint8_t someHeuristic(const Board& b);
 
-uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, bool canSwitch) {
+uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
 	size_t nMoves;
 	auto* moves = b.validMoves(s, nMoves);
 	assert(nMoves > 0);
