@@ -4,9 +4,9 @@
 
 static /*thread_local*/ std::default_random_engine gen(std::random_device{}());
 
-uint8_t RandomAgent::makeMove(const Board& b, Side s, bool canSwitch) {
+uint8_t RandomAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
 	// 1/8 chance of switching when possible, since there will always be 7 other moves
-	if(canSwitch) {
+	if(movesSoFar == 1) {
 		std::uniform_int_distribution<uint8_t> dist(0, 7);
 		if(dist(gen) == 0) {
 			return 7;

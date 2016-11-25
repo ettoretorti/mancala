@@ -38,5 +38,6 @@ private:
 	std::unique_ptr<Agent> p2_;
 	Side toMove_;
 	size_t movesPlayed_;
+	uint8_t lastMove_;
 	bool sidesSwapped_;
 };

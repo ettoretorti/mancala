@@ -2,12 +2,13 @@
 
 #include <iostream>
 
-uint8_t UserAgent::makeMove(const Board& b, Side s, bool canSwitch) {
+uint8_t UserAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
 	using std::cout;
 	using std::cin;
 
 	cout << "Make a move for " << (s == NORTH ? "NORTH" : "SOUTH") << '\n';
-	if(canSwitch) cout << "You are allowed to switch sides (enter anything >= 7)\n";
+	if(movesSoFar == 1) cout << "You are allowed to switch sides (enter anything >= 7)\n";
+	cout << "Opponent's last move was " << (int)lastMove << std::endl;
 
 	cout << "The state of the board is:\n";
 	cout << b.toString() << std::endl;
@@ -28,7 +29,7 @@ uint8_t UserAgent::makeMove(const Board& b, Side s, bool canSwitch) {
 		}
 	}
 	move -= '0';
-	cout << "Picked " << move << std::endl;
+	cout << "Picked " << (int)move << std::endl;
 
 	return move;
 }
