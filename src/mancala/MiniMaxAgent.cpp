@@ -50,7 +50,7 @@ static std::pair<uint8_t,double> minimax(uint8_t depth, uint8_t index, Side s, c
 			if(!goAgain)
 				toMove = (Side)((int)s ^ 1);
 			std::pair<uint8_t, double> currentMove = minimax(depth-1, i, toMove, bCopy);
-			if(currentMove.second >= bestMove.second)
+			if(currentMove.second <= bestMove.second)
 				bestMove = currentMove;
 		}
 		return bestMove;
