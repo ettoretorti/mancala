@@ -9,17 +9,41 @@
 */
 static std::pair<uint8_t,double> minimax(uint8_t depth, Side s, Side yourSide, Board& b, size_t movesSoFar);
 static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Side yourSide, Board& b, size_t movesSoFar, double alpha, double beta, uint8_t goAgainsNum);
+
 static double scoreDiffHeuristic(Side yourSide, Board& b);
 static double stonesInFrontEmptyHolesHeuristic(Side yourSide, Board& b);
+static int stoneNumDiff(Side yourSide, Board& b);
+static uint8_t overflow(Side yourSide, Board& b);
 
 uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
 	size_t nMoves;
 	auto* moves = b.validMoves(s, nMoves);
 	assert(nMoves > 0);
 
-	uint8_t depth = 7; // SOME DEPTH
+	uint8_t depth = 10; // SOME DEPTH
 	Board bCopy = b;
-	return moves[minimax_alphabeta(depth, s, s, bCopy, movesSoFar, -1.0, 96.0, 0).first];
+	std::pair<uint8_t,double> result = minimax_alphabeta(depth, s, s, bCopy, movesSoFar, -1.0, 96.0, 0);
+	return moves[result.first];
+}
+
+static uint8_t overflow(Side yourSide, Board& b){
+	uint8_t total = 0;
+	for(int i = 0; i < 7; i++){
+		uint8_t stonesLeft = b.stonesInHole(yourSide, i);
+		uint8_t currentHole = i;
+		while(stonesLeft > 0){
+			stonesLeft -= (7-currentHole);
+			if(stonesLeft > 6){
+				total += 6;
+				stonesLeft -= 6;
+				currentHole = 0;
+			} else if(stonesLeft > 0){
+				total += stonesLeft;
+				stonesLeft = 0;
+			}
+		}
+	}
+	return total;
 }
 
 static double stonesInFrontEmptyHolesHeuristic(Side yourSide, Board& b){
@@ -28,24 +52,38 @@ static double stonesInFrontEmptyHolesHeuristic(Side yourSide, Board& b){
 		if(b.stonesInHole(yourSide, i) == 0){
 			total += b.stonesInHole((Side)((int)yourSide ^ 1), i);
 		}
+		if(b.stonesInHole((Side)((int)yourSide ^ 1), i) == 0){
+			total -= b.stonesInHole(yourSide, i);
+		}
 	}
 	return total;
 }
 
-static double scoreDiffHeuristic(Side yourSide, Board& b) {
+static int stoneNumDiff(Side yourSide, Board& b){
 	return b.totalStones(yourSide) - b.totalStones((Side)((int)yourSide ^ 1));
+}
+
+static double scoreDiffHeuristic(Side yourSide, Board& b) {
+	return b.stonesInWell(yourSide) - b.stonesInWell((Side)((int)yourSide ^ 1));
 }
 
 static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Side yourSide, Board& b, size_t movesSoFar, double alpha, double beta, uint8_t goAgainsNum){
 	Side toMove = s;
 	size_t nMoves;
 	auto* moves = b.validMoves(toMove, nMoves);
-
-	if(depth == 0 || nMoves == 0)
-		return std::make_pair(0, scoreDiffHeuristic(yourSide, b) + stonesInFrontEmptyHolesHeuristic(yourSide, b) + goAgainsNum);
+	if(nMoves == 0){
+		if(b.stonesInWell(yourSide) > b.stonesInWell((Side)((int)yourSide ^ 1)))
+			return std::make_pair(0, 1.0/0.0);
+		else if(b.stonesInWell(yourSide) < b.stonesInWell((Side)((int)yourSide ^ 1)))
+			return std::make_pair(0, -1.0/0.0);
+		else
+			return std::make_pair(0, 0);
+	}
+	if(depth == 0)
+		return std::make_pair(0, scoreDiffHeuristic(yourSide, b) + stonesInFrontEmptyHolesHeuristic(yourSide, b) + stoneNumDiff(yourSide, b) - overflow(yourSide, b));
 	// MAXIMIZE
 	if(toMove == yourSide){
-		std::pair<uint8_t, double> bestMove = std::make_pair(0, 0.0);
+		std::pair<uint8_t, double> bestMove = std::make_pair(0, -1.0/0.0);
 		// switch, maximum
 		if(movesSoFar == 1){
 			Board bCopy = b;
@@ -80,7 +118,7 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Side y
 		return bestMove;
 	// MINIMIZE
 	} else {
-		std::pair<uint8_t, double> bestMove = std::make_pair(0, 100.0); // SHOULD BE ADJUSTED TO MAX HEURISTIC
+		std::pair<uint8_t, double> bestMove = std::make_pair(0, 1.0/0.0); // SHOULD BE ADJUSTED TO MAX HEURISTIC
 		// switch, minimum
 		if(movesSoFar == 1){
 			Board bCopy = b;
@@ -121,7 +159,7 @@ static std::pair<uint8_t,double> minimax(uint8_t depth, Side s, Side yourSide, B
 	auto* moves = b.validMoves(toMove, nMoves);
 
 	if(depth == 0 || nMoves == 0)
-		return std::make_pair(0, b.totalStones(yourSide) - b.totalStones((Side)((int)yourSide ^ 1)));
+		return std::make_pair(0, b.stonesInWell(yourSide) - b.stonesInWell((Side)((int)yourSide ^ 1)));
 	// MAXIMIZE
 	if(toMove == yourSide){
 		std::pair<uint8_t, double> bestMove = std::make_pair(0, 0.0);
