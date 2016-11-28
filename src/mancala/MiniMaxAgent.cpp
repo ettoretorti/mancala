@@ -79,8 +79,38 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Side y
 		else
 			return std::make_pair(0, 0);
 	}
-	if(depth == 0)
-		return std::make_pair(0, scoreDiffHeuristic(yourSide, b) + stonesInFrontEmptyHolesHeuristic(yourSide, b) + stoneNumDiff(yourSide, b) - overflow(yourSide, b));
+	if(depth == 0){
+		int stoneNumDiff = b.stonesInWell(yourSide) - b.stonesInWell((Side)((int)yourSide ^ 1));
+		int scoreDiff = 0;
+		int stonesInFrontEmptyHoles = 0;
+		uint8_t overflow = 0;
+
+		for(int i = 0; i < 7; i++){
+			stoneNumDiff -= b.stonesInHole((Side)((int)yourSide ^ 1), i);
+			stoneNumDiff += b.stonesInHole(yourSide, i);
+			if(b.stonesInHole(yourSide, i) == 0){
+				stonesInFrontEmptyHoles += b.stonesInHole((Side)((int)yourSide ^ 1), i);
+			}
+			if(b.stonesInHole((Side)((int)yourSide ^ 1), i) == 0){
+				stonesInFrontEmptyHoles -= b.stonesInHole(yourSide, i);
+			}
+
+			uint8_t stonesLeft = b.stonesInHole(yourSide, i);
+			uint8_t currentHole = i;
+			while(stonesLeft > 0){
+				stonesLeft -= (7-currentHole);
+				if(stonesLeft > 6){
+					overflow += 6;
+					stonesLeft -= 6;
+					currentHole = 0;
+				} else if(stonesLeft > 0){
+					overflow += stonesLeft;
+					stonesLeft = 0;
+				}
+			}
+		}
+		return std::make_pair(0, scoreDiff + stoneNumDiff + stonesInFrontEmptyHoles - overflow);
+	}
 	// MAXIMIZE
 	if(toMove == yourSide){
 		std::pair<uint8_t, double> bestMove = std::make_pair(0, -1.0/0.0);
