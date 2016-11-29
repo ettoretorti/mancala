@@ -14,6 +14,8 @@ static double scoreDiffHeuristic(Side yourSide, Board& b);
 static double stonesInFrontEmptyHolesHeuristic(Side yourSide, Board& b);
 static int stoneNumDiff(Side yourSide, Board& b);
 static uint8_t overflow(Side yourSide, Board& b);
+double parameters[4] = {1,1,1,1};
+
 
 uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
 	size_t nMoves;
@@ -23,6 +25,7 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_
 	uint8_t depth = 10; // SOME DEPTH
 	Board bCopy = b;
 	std::pair<uint8_t,double> result = minimax_alphabeta(depth, s, s, bCopy, movesSoFar, -1.0, 96.0, 0);
+	std::cout << (int) s << ": " << (int) result.first << std::endl;
 	return moves[result.first];
 }
 
@@ -109,7 +112,7 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Side y
 				}
 			}
 		}
-		return std::make_pair(0, scoreDiff + stoneNumDiff + stonesInFrontEmptyHoles - overflow);
+		return std::make_pair(0, parameters[0]*scoreDiff + parameters[1]*stoneNumDiff + parameters[2]*stonesInFrontEmptyHoles - parameters[3]*overflow);
 	}
 	// MAXIMIZE
 	if(toMove == yourSide){
