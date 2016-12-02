@@ -25,7 +25,7 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_
 	uint8_t depth = 10; // SOME DEPTH
 	Board bCopy = b;
 	std::pair<uint8_t,double> result = minimax_alphabeta(depth, s, s, bCopy, movesSoFar, -1.0, 96.0, 0);
-	std::cout << (int) s << ": " << (int) result.first << std::endl;
+	//std::cout << (int) s << ": " << (int) result.first << std::endl;
 	return moves[result.first];
 }
 
@@ -83,6 +83,7 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Side y
 			return std::make_pair(0, 0);
 	}
 	if(depth == 0){
+		/*
 		int stoneNumDiff = b.stonesInWell(yourSide) - b.stonesInWell((Side)((int)yourSide ^ 1));
 		int scoreDiff = 0;
 		int stonesInFrontEmptyHoles = 0;
@@ -112,7 +113,8 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Side y
 				}
 			}
 		}
-		return std::make_pair(0, parameters[0]*scoreDiff + parameters[1]*stoneNumDiff + parameters[2]*stonesInFrontEmptyHoles - parameters[3]*overflow);
+		*/
+		return std::make_pair(0, parameters[0]*scoreDiffHeuristic(yourSide, b) + parameters[1]*stoneNumDiff(yourSide, b) + parameters[2]*stonesInFrontEmptyHolesHeuristic(yourSide, b) - parameters[3]*overflow(yourSide, b));
 	}
 	// MAXIMIZE
 	if(toMove == yourSide){
@@ -204,7 +206,7 @@ static std::pair<uint8_t,double> minimax(uint8_t depth, Side s, Side yourSide, B
 			if(currentMove.second >= bestMove.second){
 				bestMove.first = 7;
 				bestMove.second = currentMove.second;
-				std::cout << bestMove.second << std::endl;
+				//std::cout << bestMove.second << std::endl;
 			}
 			yourSide = (Side)((int)yourSide ^ 1);
 		}

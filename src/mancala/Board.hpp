@@ -41,6 +41,8 @@ private:
 	uint8_t sMoves_[7];
 	uint8_t noNMoves_;
 	uint8_t noSMoves_;
+	uint8_t noNStones_;
+	uint8_t noSStones_;
 
 	void addMove(Side side, size_t holeNo);
 	void placeAStone(Side curSide, uint8_t curHole);
