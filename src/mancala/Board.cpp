@@ -220,7 +220,7 @@ bool Board::makeMove(Side side, size_t holeNo) {
 
 		// Empty Hole Capture
 		if(curSide == side && stonesInHole(curSide, curHole) == 1
-				&& stonesInHole(opposite(curSide), 6 - curHole) >= 0){
+				&& stonesInHole(opposite(curSide), 6 - curHole) > 0){
 			stonesInWell(curSide) += stonesInHole(opposite(curSide), 6-curHole) + 1;
 			removeMove(opposite(curSide), 6-curHole);
 			removeMove(curSide, curHole);
