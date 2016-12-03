@@ -7,7 +7,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(BUILD_TESTS "Build the unit tests" ON)
 option(BUILD_BOT "Build the game playing bot" ON)
 option(BUILD_ARENA "Build the agent arena" ON)
+option(BUILD_UTILS "Build utilities" ON)
 
+find_package(OpenMP)
+
+if(OPENMP_FOUND)
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 
 # Build the core mancala files as a library to make it easier to test
 
@@ -61,6 +67,18 @@ if(BUILD_BOT)
 endif()
 
 
+# Various utilities
+
+if(BUILD_UTILS)
+    add_executable(when2pie "src/util/when2pie.cpp")
+    target_link_libraries(when2pie mancala)
+    target_include_directories(when2pie PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+    add_executable(endgame "src/util/endgame.cpp")
+    target_link_libraries(endgame mancala)
+    target_include_directories(endgame PRIVATE ${CMAKE_SOURCE_DIR}/src)
+endif()
+
 # Agent wars
 
 if(BUILD_ARENA)
@@ -71,4 +89,6 @@ if(BUILD_ARENA)
     target_include_directories(
         arena
         PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+
 endif()
