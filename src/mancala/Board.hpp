@@ -49,3 +49,37 @@ private:
 	void removeMove(Side side, size_t holeNo);
 	void removeAStone(Side curSide, uint8_t curHole);
 };
+
+namespace std {
+
+template<> struct hash<Board> {
+	typedef Board argument_type;
+	typedef std::size_t result_type;
+
+	// Taken from boost
+	inline void combine(std::size_t& hash, uint8_t val) const {
+		std::hash<uint8_t> h;
+
+		hash ^= h(val) + 0x9e3779b9 + (hash<<6) + (hash>>2);
+	}
+
+	result_type operator()(const argument_type& b) const {
+		std::hash<uint8_t> byteHasher;
+		result_type toRet = byteHasher(b.stonesInHole(NORTH, 0));
+
+		for(size_t i = 1; i < 7; i++) {
+			combine(toRet, b.stonesInHole(NORTH, i));
+		}
+
+		for(size_t i = 0; i < 7; i++) {
+			combine(toRet, b.stonesInHole(SOUTH, i));
+		}
+
+		combine(toRet, b.stonesInWell(NORTH));
+		combine(toRet, b.stonesInWell(SOUTH));
+
+		return toRet;
+	}
+};
+
+}
