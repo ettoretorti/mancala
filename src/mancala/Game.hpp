@@ -19,11 +19,15 @@ public:
 
 	void reset();
 
+	// copies everything but the players
+	void copyState(const Game& other);
+
 	bool isOver() const;
 	bool sidesSwapped() const;
 	bool& sidesSwapped();
 
 	size_t movesPlayed() const;
+	size_t& movesPlayed();
 
 	void stepTurn();
 	void playAll();

@@ -44,6 +44,13 @@ void Game::reset() {
 	sidesSwapped_ = false;
 }
 
+void Game::copyState(const Game& other) {
+	board_ = other.board_;
+	toMove_ = other.toMove_;
+	movesPlayed_ = other.movesPlayed_;
+	sidesSwapped_ = other.sidesSwapped_;
+}
+
 bool Game::isOver() const {
 	size_t nValidMoves;
 	board_.validMoves(toMove_, nValidMoves);
@@ -52,6 +59,10 @@ bool Game::isOver() const {
 }
 
 size_t Game::movesPlayed() const {
+	return movesPlayed_;
+}
+
+size_t& Game::movesPlayed() {
 	return movesPlayed_;
 }
 
