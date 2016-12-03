@@ -1,8 +1,11 @@
 #include "MiniMaxAgent.hpp"
+
 #include <utility>
 #include <iostream>
 #include <cassert>
 #include <vector>
+#include <algorithm>
+
 /**
 *
 *	index: The index of the best move. If the index == 7, then its a switch
