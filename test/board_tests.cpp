@@ -278,3 +278,12 @@ TEST(Board, Capture) {
 	}
 	EXPECT_FALSE(movesAvail[6]);
 }
+
+TEST(Board, NotACapture) {
+	Board b;
+	b.clear();
+	b.stonesInHole(SOUTH, 0) = 2;
+	b.makeMove(SOUTH, 0);
+
+	EXPECT_EQ(0u, b.stonesInWell(SOUTH));
+}
