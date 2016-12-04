@@ -1,0 +1,15 @@
+Here are the results of 1000 monte carlo games played after all 7 possible starting moves.
+
+When first move is 0 SOUTH=576 NORTH=402 DIFF=0.174
+When first move is 1 SOUTH=418 NORTH=558 DIFF=-0.14
+When first move is 2 SOUTH=360 NORTH=616 DIFF=-0.256
+When first move is 3 SOUTH=414 NORTH=561 DIFF=-0.147
+When first move is 4 SOUTH=659 NORTH=318 DIFF=0.341
+When first move is 5 SOUTH=563 NORTH=414 DIFF=0.149
+When first move is 6 SOUTH=495 NORTH=482 DIFF=0.013
+
+Summary
+=======
+Go for a swap as player 2 whenever player 1's first move was 0,4,5,6.
+
+Always start with move 6 as player 1 to minimize the potential advantage handed over to player 2.
