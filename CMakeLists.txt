@@ -15,17 +15,21 @@ if(OPENMP_FOUND)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/deps/fmtlib)
+
 # Build the core mancala files as a library to make it easier to test
 
 file(GLOB_RECURSE LIB_FILES "src/mancala/*.cpp" "src/mancala/*.c")
 
 add_library(mancala STATIC ${LIB_FILES})
 target_include_directories(mancala
-    PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    PRIVATE ${CMAKE_SOURCE_DIR}/src
+    PRIVATE fmt)
 target_compile_options(mancala
     PRIVATE -Wall
     PRIVATE -Wextra
     PRIVATE -pedantic)
+target_link_libraries(mancala fmt)
 
 
 # Use googletest as our testing framework. If this part of configuring fails

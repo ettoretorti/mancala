@@ -5,6 +5,8 @@
 #include <string>
 #include <sstream>
 
+#include <fmt/format.h>
+
 
 //static utils
 static Side opposite(Side s) {
@@ -240,20 +242,24 @@ const uint8_t* Board::validMoves(Side side, size_t& nMoves) const {
 
 std::string Board::toString() const {
 	std::stringstream buf;
+	
+	buf << "╔══╦══╦══╦══╦══╦══╦══╦══╦══╗\n";
 
-	buf << "NORTH SCORE: " << (size_t)nScore_ << '\n';
-	buf << "SOUTH SCORE: " << (size_t)sScore_ << '\n';
-	buf << '\n';
-
-	for(size_t i = 0; i < 6; i++) {
-		buf << (size_t)nHoles_[6-i] << " ";
+	buf << "║  ║";
+	for(size_t i = 0; i < 7; i++) {
+		buf << fmt::sprintf("%2u║", (size_t)nHoles_[6-i]);
 	}
-	buf << (size_t)nHoles_[0] << '\n';
+	buf << "  ║\n";
 
-	for(size_t i = 0; i < 6; i++) {
-		buf << (size_t)sHoles_[i] << " ";
+	buf << fmt::sprintf("║%2u╠══╬══╬══╬══╬══╬══╬══╣%2u║\n", nScore_, sScore_);
+
+	buf << "║  ║";
+	for(size_t i = 0; i < 7; i++) {
+		buf << fmt::sprintf("%2u║", (size_t)sHoles_[i]);
 	}
-	buf << (size_t)sHoles_[6] << '\n';
+	buf << "  ║\n";
+	
+	buf << "╚══╩══╩══╩══╩══╩══╩══╩══╩══╝\n";
 
 	return buf.str();
 }
