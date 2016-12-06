@@ -1,16 +1,17 @@
-#include <cassert>
-
 #include "Game.hpp"
 
+#include <cassert>
+#include <chrono>
+
 Game::Game(std::unique_ptr<Agent> p1, std::unique_ptr<Agent> p2)
-	: board_(), p1_(std::move(p1)), p2_(std::move(p2)), toMove_(SOUTH),
-	  movesPlayed_(0), sidesSwapped_(false)
+	: board_(), p1_(std::move(p1)), p2_(std::move(p2)), p1Time_(0.0), p2Time_(0.0),
+	  toMove_(SOUTH), movesPlayed_(0), sidesSwapped_(false), takeTimings_(false)
 {}
 
 
 Game::Game(Agent* p1, Agent* p2)
-	: board_(), p1_(p1), p2_(p2), toMove_(SOUTH), movesPlayed_(0),
-	  sidesSwapped_(false)
+	: board_(), p1_(p1), p2_(p2), p1Time_(0.0), p2Time_(0.0),
+	  toMove_(SOUTH), movesPlayed_(0), sidesSwapped_(false), takeTimings_(false)
 {}
 
 Board& Game::board() {
@@ -66,15 +67,63 @@ size_t& Game::movesPlayed() {
 	return movesPlayed_;
 }
 
+uint8_t Game::lastMove() const {
+	return lastMove_;
+}
+
+uint8_t& Game::lastMove() {
+	return lastMove_;
+}
+
+double Game::p1Time() const {
+	return p1Time_;
+}
+
+double& Game::p1Time() {
+	return p1Time_;
+}
+
+double Game::p2Time() const {
+	return p2Time_;
+}
+
+double& Game::p2Time() {
+	return p2Time_;
+}
+
+bool& Game::takeTimings() {
+	return takeTimings_;
+}
+
 void Game::stepTurn() {
+	using namespace std::chrono;
+
 	assert(!isOver());
 
 	bool canSwitch = movesPlayed_ == 1;
+	
+	int playerToMove = toMove_ == SOUTH && !sidesSwapped_ ? 1 :
+	                   toMove_ == NORTH && !sidesSwapped_ ? 2 :
+	                   toMove_ == SOUTH &&  sidesSwapped_ ? 2 :
+	                                                       1;  
+	
+	uint8_t move;
 
-	uint8_t move = toMove_ == SOUTH && !sidesSwapped_ ? p1_->makeMove(board_, toMove_, movesPlayed_, lastMove_) :
-	               toMove_ == NORTH && !sidesSwapped_ ? p2_->makeMove(board_, toMove_, movesPlayed_, lastMove_) :
-	               toMove_ == SOUTH &&  sidesSwapped_ ? p2_->makeMove(board_, toMove_, movesPlayed_, lastMove_) :
-	                                                    p1_->makeMove(board_, toMove_, movesPlayed_, lastMove_);
+	if(takeTimings_) {
+		auto before = high_resolution_clock::now();
+
+		move = playerToMove == 1 ? p1_->makeMove(board_, toMove_, movesPlayed_, lastMove_) :
+		                           p2_->makeMove(board_, toMove_, movesPlayed_, lastMove_);
+		
+		auto after = high_resolution_clock::now();
+		double timeTaken = duration_cast<duration<double>>(after - before).count();
+
+		if(playerToMove == 1) p1Time_ += timeTaken;
+		else                  p2Time_ += timeTaken;
+	} else {
+		move = playerToMove == 1 ? p1_->makeMove(board_, toMove_, movesPlayed_, lastMove_) :
+		                           p2_->makeMove(board_, toMove_, movesPlayed_, lastMove_);
+	}
 
 	assert(canSwitch || move < 7);
 

@@ -29,6 +29,17 @@ public:
 	size_t movesPlayed() const;
 	size_t& movesPlayed();
 
+	uint8_t lastMove() const;
+	uint8_t& lastMove();
+
+	double p1Time() const;
+	double& p1Time();
+
+	double p2Time() const;
+	double& p2Time();
+
+	bool& takeTimings();
+
 	void stepTurn();
 	void playAll();
 
@@ -40,8 +51,11 @@ private:
 	Board board_;
 	std::unique_ptr<Agent> p1_;
 	std::unique_ptr<Agent> p2_;
+	double p1Time_;
+	double p2Time_;
 	Side toMove_;
 	size_t movesPlayed_;
 	uint8_t lastMove_;
 	bool sidesSwapped_;
+	bool takeTimings_;
 };
