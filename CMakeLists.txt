@@ -81,6 +81,10 @@ if(BUILD_UTILS)
     add_executable(endgame "src/util/endgame.cpp")
     target_link_libraries(endgame mancala)
     target_include_directories(endgame PRIVATE ${CMAKE_SOURCE_DIR}/src)
+    
+	add_executable(countatdepth "src/util/countatdepth.cpp")
+    target_link_libraries(countatdepth mancala)
+    target_include_directories(countatdepth PRIVATE ${CMAKE_SOURCE_DIR}/src)
 endif()
 
 # Agent wars
