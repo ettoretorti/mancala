@@ -11,7 +11,9 @@ uint8_t UserAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t l
 	cout << "Opponent's last move was " << (int)lastMove << std::endl;
 
 	cout << "The state of the board is:\n";
-	cout << b.toString() << std::endl;
+	cout << "     6  5  4  3  2  1  0\n";
+	cout << b.toString();
+	cout << "     0  1  2  3  4  5  6\n";
 	
 	bool done = false;
 	uint8_t move;
