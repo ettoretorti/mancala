@@ -34,8 +34,9 @@ static inline size_t childIdx(size_t idx, size_t move) {
 static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t depth, size_t idx);
 
 uint8_t MCAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
-	//always swap for now
-	if(movesSoFar == 1) return 7;
+	// look at notes/WHEN_TO_PIE for details
+	if(movesSoFar == 0) return 6;
+	if(movesSoFar == 1 && (lastMove == 0 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return 7;
 
 	auto ucbs = std::unique_ptr<UCB[]>(new UCB[UCB_POOL_SIZE]);
 	
@@ -65,7 +66,7 @@ uint8_t MCAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t las
 }
 
 // This is hacky as fuck, but will do for now
-static Game g(new RandomAgent, new RandomAgent);
+static thread_local Game g(new RandomAgent, new RandomAgent);
 
 // South wins, north wins
 static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t depth, size_t idx) {
