@@ -263,3 +263,7 @@ std::string Board::toString() const {
 
 	return buf.str();
 }
+
+bool operator==(const Board& b1, const Board& b2) {
+	return memcmp(&b1, &b2, 16) == 0;
+}
