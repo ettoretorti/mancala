@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <functional>
 
 enum Side { SOUTH = 0, NORTH = 1 };
 
