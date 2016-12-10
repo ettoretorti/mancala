@@ -51,6 +51,8 @@ private:
 	void removeAStone(Side curSide, uint8_t curHole);
 };
 
+bool operator==(const Board& b1, const Board& b2);
+
 namespace std {
 
 template<> struct hash<Board> {
