@@ -7,7 +7,7 @@
 #include <iostream>
 
 constexpr uint64_t GAMES_PER_CHUNK = 1ull;
-constexpr uint64_t CHUNKS_PER_MOVE = 1000ull;
+constexpr uint64_t CHUNKS_PER_MOVE = 4ull;
 
 static thread_local Game g(new FinalAgent(), new FinalAgent());
 
@@ -42,7 +42,10 @@ int main() {
 				} else if(g.board().stonesInWell(NORTH) > 49) {
 					nWins += 2;
 				} else {
-					int diff = g.scoreDifference();
+					uint8_t scores[2] = { g.board().stonesInWell(SOUTH), g.board().stonesInWell(NORTH) };
+					scores[int(g.toMove())^1] += 98 - scores[0] - scores[1];
+
+					int diff = int(scores[0]) - scores[1];
 					if(diff > 0) sWins += 2;
 					if(diff < 0) nWins += 2;
 					if(diff == 0) {
