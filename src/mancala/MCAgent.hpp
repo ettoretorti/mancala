@@ -16,8 +16,14 @@ public:
 	uint16_t& baseGames();
 	uint32_t& iterations();
 
+	float& timePerMove();
+	bool& useIterations();
+
 private:
 	uint16_t depth_;
 	uint16_t baseGames_;
 	uint32_t iterations_;
+
+	float timePerMove_;
+	bool useIterations_;
 };

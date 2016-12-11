@@ -7,6 +7,7 @@
 #include <memory>
 #include <cmath>
 #include <tuple>
+#include <chrono>
 
 struct UCB {
 	Board board;
@@ -28,7 +29,7 @@ static inline size_t childIdx(size_t idx, size_t move) {
 }
 
 MCAgent::MCAgent(uint16_t ucbDepth, uint16_t ucbBaseGames, uint32_t iterations)
-	: depth_(ucbDepth), baseGames_(ucbBaseGames), iterations_(iterations)
+	: depth_(ucbDepth), baseGames_(ucbBaseGames), iterations_(iterations), timePerMove_(1.0), useIterations_(true)
 {}
 
 uint16_t& MCAgent::depth() {
@@ -43,6 +44,14 @@ uint32_t& MCAgent::iterations() {
 	return iterations_;
 }
 
+float& MCAgent::timePerMove() {
+	return timePerMove_;
+}
+
+bool& MCAgent::useIterations() {
+	return useIterations_;
+}
+
 static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t depth, size_t idx, size_t baseGames);
 
 uint8_t MCAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
@@ -50,6 +59,8 @@ uint8_t MCAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t las
 }
 
 std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
+	using namespace std::chrono;
+
 	// look at notes/WHEN_TO_PIE for details
 	if(movesSoFar == 0) return std::make_pair(6, 0.5);
 	if(movesSoFar == 1 && (lastMove == 0 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return std::make_pair(7, 0.5);
@@ -62,8 +73,30 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 	ucbs[0].board = b;
 	ucbs[0].whosTurn = s;
 
-	for(size_t i = 0; i < iterations_; i++) {
+	if(useIterations_) {
+		for(size_t i = 0; i < iterations_; i++) {
+			montecarlo(s, ucbs.get(), depth_ - 1, 0, baseGames_);
+		}
+	} else {
+		auto deadline = high_resolution_clock::now() + duration<double>(timePerMove_);
+
+		auto t1 = high_resolution_clock::now();
 		montecarlo(s, ucbs.get(), depth_ - 1, 0, baseGames_);
+		auto t2 = high_resolution_clock::now();
+
+		size_t itsCompleted = ucbs[0].plays / 2 / baseGames_;
+
+		while(t2 < deadline) {
+			double itsPerSec = itsCompleted / duration_cast<duration<double>>(t2 - t1).count();
+			itsCompleted = std::max(size_t(1), size_t(itsPerSec * duration_cast<duration<double>>(deadline - t2).count()));
+
+			t1 = high_resolution_clock::now();
+			for(size_t i = 0; i < itsCompleted; i++) {
+				montecarlo(s, ucbs.get(), depth_ - 1, 0, baseGames_);
+			}
+			t2 = high_resolution_clock::now();
+		}
+
 	}
 
 	size_t bestMove = 0;
