@@ -143,24 +143,18 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 
 	// The game is over
 	if(nMoves == 0) {
-		//cleanup for the opponent
-		for(uint8_t i = 0; i < 7; i++) {
-			cur.board.stonesInWell(opp) += cur.board.stonesInHole(toMove, i);
-			cur.board.stonesInHole(toMove, i) = 0;
-		}
-
 		//determine who won and update accordingly
-		uint8_t southScore = cur.board.stonesInWell(SOUTH);
-		uint8_t northScore = cur.board.stonesInWell(NORTH);
+		uint8_t scores[2] = { cur.board.stonesInWell(SOUTH), cur.board.stonesInWell(NORTH) };
+		scores[opp] += 98 - scores[0] - scores[1];
 
 		cur.plays+= 2 * baseGames;
 
-		if(southScore > northScore) {
+		if(scores[0] > scores[1]) {
 			cur.wins[0] += 2 * baseGames;
 			return std::make_tuple((uint32_t)baseGames, 0u);
 		}
 
-		if(southScore < northScore) {
+		if(scores[0] < scores[1]) {
 			cur.wins[1] +=  2 * baseGames;
 			return std::make_tuple(0u, (uint32_t)baseGames);
 		}

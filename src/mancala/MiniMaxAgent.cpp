@@ -41,15 +41,14 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Side y
 
 	// The Game is Actually Over
 	if(nMoves == 0){
-		double stonesOnBoardMax = b.totalStones(yourSide);
-		double stonesOnBoardMin = b.totalStones(opponentSide);
-		double totalYourSide = (b.stonesInWell(yourSide) + stonesOnBoardMax) - (b.stonesInWell(opponentSide) + stonesOnBoardMin);
+		uint8_t scores[2] = { b.stonesInWell(SOUTH), b.stonesInWell(NORTH) };
+		scores[Side(int(s)^1)] += 98 - scores[0] - scores[1];
 
-		double val = 0.0;
-		if(totalYourSide > 0)
-			val = 1.0/0.0;
-		else if(totalYourSide < 0)
-			val = -1.0/0.0;
+		int scoreDiff = int(scores[yourSide]) - scores[opponentSide];
+
+		double val = scoreDiff > 0 ?  1.0/0.0 :
+		             scoreDiff < 0 ? -1.0/0.0 :
+		                             0.0;
 		return std::make_pair(0, val);
 	}
 
