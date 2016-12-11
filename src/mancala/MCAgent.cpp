@@ -123,6 +123,20 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 	Side toMove = cur.whosTurn;
 	Side opp = opposite(toMove);
 
+	// Guaranteed win/loss ;)
+	if(cur.board.stonesInWell(SOUTH) > 49) {
+		cur.plays += 2 * baseGames;
+		cur.wins[0] += 2 * baseGames;
+
+		return std::make_tuple(uint32_t(2 * baseGames), uint32_t(0));
+	}
+
+	if(cur.board.stonesInWell(NORTH) > 49) {
+		cur.plays += 2 * baseGames;
+		cur.wins[1] += 2 * baseGames;
+
+		return std::make_tuple(uint32_t(0), uint32_t(2 * baseGames));
+	}
 
 	size_t nMoves;
 	const auto* moves = cur.board.validMoves(toMove, nMoves);
@@ -155,21 +169,6 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 		cur.wins[1] += baseGames;
 
 		return std::make_tuple((uint32_t)baseGames, (uint32_t)baseGames);
-	}
-
-	// The game is over for another reason ;)
-	if(cur.board.stonesInWell(SOUTH) > 49) {
-		cur.plays += 2 * baseGames;
-		cur.wins[0] += 2 * baseGames;
-
-		return std::make_tuple(uint32_t(2 * baseGames), uint32_t(0));
-	}
-
-	if(cur.board.stonesInWell(NORTH) > 49) {
-		cur.plays += 2 * baseGames;
-		cur.wins[1] += 2 * baseGames;
-
-		return std::make_tuple(uint32_t(0), uint32_t(2 * baseGames));
 	}
 
 	if(depth == 0) {
