@@ -21,7 +21,7 @@ static uint8_t randBig(uint8_t n) {
 	return s;
 }
 
-uint8_t RandomAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
+uint8_t __attribute__((hot)) RandomAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
 	// 1/8 chance of switching when possible, since there will always be 7 other moves
 	if(movesSoFar == 1) {
 		if(lel() == 0) {
