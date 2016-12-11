@@ -1,10 +1,15 @@
 #include <mancala/Board.hpp>
 #include <mancala/Game.hpp>
 #include <mancala/RandomAgent.hpp>
+#include <mancala/FinalAgent.hpp>
+#include <mancala/MCAgent.hpp>
 
 #include <iostream>
 
-constexpr uint64_t GAMES_PER_MOVE = 1000000ull;
+constexpr uint64_t GAMES_PER_CHUNK = 1ull;
+constexpr uint64_t CHUNKS_PER_MOVE = 1000ull;
+
+static thread_local Game g(new FinalAgent(), new FinalAgent());
 
 int main() {
 	Board boards[7];
@@ -18,27 +23,44 @@ int main() {
 	uint64_t northWins[7] = { 0 };
 
 	//simulate positions
-	#pragma omp parallel for
 	for(size_t i = 0; i < 7; i++) {
-		Game g(new RandomAgent(), new RandomAgent());
+		uint64_t sWins = 0;
+		uint64_t nWins = 0;
 
-		for(size_t j = 0; j < GAMES_PER_MOVE; j++) {
-			g.board() = boards[i];
-			g.movesPlayed() = 3; // no more additional switching
-			g.toMove() = NORTH;
+		#pragma omp parallel for schedule(dynamic) reduction(+:sWins,nWins)
+		for(size_t j = 0; j < CHUNKS_PER_MOVE; j++) {
 
-			g.playAll();
-			int diff = g.scoreDifference();
+			for(size_t k = 0; k < GAMES_PER_CHUNK; k++) {
+				g.board() = boards[i];
+				g.movesPlayed() = 3; // no more additional switching
+				g.toMove() = NORTH;
 
-			if(diff > 0) southWins[i]++;
-			if(diff < 0) northWins[i]++;
+				while(g.board().stonesInWell(SOUTH) <= 49 && g.board().stonesInWell(NORTH) <= 49 && !g.isOver()) g.stepTurn();
+				
+				if(g.board().stonesInWell(SOUTH) > 49) {
+					sWins += 2;
+				} else if(g.board().stonesInWell(NORTH) > 49) {
+					nWins += 2;
+				} else {
+					int diff = g.scoreDifference();
+					if(diff > 0) sWins += 2;
+					if(diff < 0) nWins += 2;
+					if(diff == 0) {
+						nWins += 1; sWins += 1;
+					}
+				}
+			}
 		}
+
+		southWins[i] = sWins;
+		northWins[i] = nWins;
+		std::cout << "DONE WITH POSITION " << i << std::endl;
 	}
 
 	for(size_t i = 0; i < 7; i++) {
 		std::cout << "When first move is " << i << " "
-		          << "SOUTH=" << southWins[i] << " NORTH=" << northWins[i]
-		          << " DIFF=" << (((int64_t)southWins[i] - (int64_t)northWins[i])/(long double)GAMES_PER_MOVE)
+		          << "SOUTH=" << southWins[i]/2.0 << " NORTH=" << northWins[i]/2.0
+		          << " DIFF=" << (((double)southWins[i] - (double)northWins[i])/(long double)(2 * GAMES_PER_CHUNK * CHUNKS_PER_MOVE))
 		          << std::endl;
 	}
 }
