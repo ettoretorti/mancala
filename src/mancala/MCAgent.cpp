@@ -15,13 +15,9 @@ struct UCB {
 	Side whosTurn;
 };
 
-constexpr size_t ipow(size_t base, size_t exp, size_t res = 1) {
+size_t ipow(size_t base, size_t exp, size_t res = 1) {
 	return exp == 0 ? res : ipow(base, exp-1, res * base);
 }
-
-constexpr size_t UCB_DEPTH = 5;
-constexpr size_t UCB_POOL_SIZE = ipow(7, UCB_DEPTH);
-constexpr size_t UCB_BASE_GAMES = 20;
 
 static inline Side opposite(Side s) {
 	return (Side)(((int)s) ^ 1);
@@ -31,7 +27,23 @@ static inline size_t childIdx(size_t idx, size_t move) {
 	return 7 * idx + move + 1;
 }
 
-static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t depth, size_t idx);
+MCAgent::MCAgent(uint16_t ucbDepth, uint16_t ucbBaseGames, uint32_t iterations)
+	: depth_(ucbDepth), baseGames_(ucbBaseGames), iterations_(iterations)
+{}
+
+uint16_t& MCAgent::depth() {
+	return depth_;
+}
+
+uint16_t& MCAgent::baseGames() {
+	return baseGames_;
+}
+
+uint32_t& MCAgent::iterations() {
+	return iterations_;
+}
+
+static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t depth, size_t idx, size_t baseGames);
 
 uint8_t MCAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
 	return makeMoveAndScore(b, s, movesSoFar, lastMove).first;
@@ -42,7 +54,7 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 	if(movesSoFar == 0) return std::make_pair(6, 0.5);
 	if(movesSoFar == 1 && (lastMove == 0 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return std::make_pair(7, 0.5);
 
-	auto ucbs = std::unique_ptr<UCB[]>(new UCB[UCB_POOL_SIZE]);
+	auto ucbs = std::unique_ptr<UCB[]>(new UCB[ipow(7, depth_)]);
 	
 	size_t nMoves;
 	const uint8_t* moves = b.validMoves(s, nMoves);
@@ -50,8 +62,8 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 	ucbs[0].board = b;
 	ucbs[0].whosTurn = s;
 
-	for(size_t i = 0; i < 7500; i++) {
-		montecarlo(s, ucbs.get(), 0, 0);
+	for(size_t i = 0; i < iterations_; i++) {
+		montecarlo(s, ucbs.get(), depth_ - 1, 0, baseGames_);
 	}
 
 	size_t bestMove = 0;
@@ -73,7 +85,7 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 static thread_local Game g(new RandomAgent, new RandomAgent);
 
 // South score, north score
-static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t depth, size_t idx) {
+static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t depth, size_t idx, size_t baseGames) {
 	UCB& cur = ucbs[idx];
 	Side toMove = cur.whosTurn;
 	Side opp = opposite(toMove);
@@ -94,28 +106,28 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 		uint8_t southScore = cur.board.stonesInWell(SOUTH);
 		uint8_t northScore = cur.board.stonesInWell(NORTH);
 
-		cur.plays+= 2 * UCB_BASE_GAMES;
+		cur.plays+= 2 * baseGames;
 
 		if(southScore > northScore) {
-			cur.wins[0] += 2 * UCB_BASE_GAMES;
-			return std::make_tuple((uint32_t)UCB_BASE_GAMES, 0u);
+			cur.wins[0] += 2 * baseGames;
+			return std::make_tuple((uint32_t)baseGames, 0u);
 		}
 
 		if(southScore < northScore) {
-			cur.wins[1] +=  2 * UCB_BASE_GAMES;
-			return std::make_tuple(0u, (uint32_t)UCB_BASE_GAMES);
+			cur.wins[1] +=  2 * baseGames;
+			return std::make_tuple(0u, (uint32_t)baseGames);
 		}
 
-		cur.wins[0] += UCB_BASE_GAMES;
-		cur.wins[1] += UCB_BASE_GAMES;
+		cur.wins[0] += baseGames;
+		cur.wins[1] += baseGames;
 
-		return std::make_tuple((uint32_t)UCB_BASE_GAMES, (uint32_t)UCB_BASE_GAMES);
+		return std::make_tuple((uint32_t)baseGames, (uint32_t)baseGames);
 	}
 
-	if(depth == UCB_DEPTH - 1) {
+	if(depth == 0) {
 		uint32_t wins[2] = { 0 };
 
-		for(size_t i = 0; i < UCB_BASE_GAMES; i++) {
+		for(size_t i = 0; i < baseGames; i++) {
 			g.board() = cur.board;
 			g.movesPlayed() = 3; // to avoid switching
 			g.toMove() = toMove;
@@ -131,7 +143,7 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 			}
 		}
 
-		cur.plays += 2 * UCB_BASE_GAMES;
+		cur.plays += 2 * baseGames;
 		cur.wins[0] += wins[0];
 		cur.wins[1] += wins[1];
 
@@ -150,7 +162,7 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 
 			child.whosTurn = opp;
 
-			auto res = montecarlo(ourSide, ucbs, depth + 1 , childIdx(idx, move));
+			auto res = montecarlo(ourSide, ucbs, depth - 1 , childIdx(idx, move), baseGames);
 
 			cur.plays += child.plays;
 			wins[0] += std::get<0>(res);
@@ -183,7 +195,7 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 	size_t childI = childIdx(idx, move);
 	uint32_t curPlays = ucbs[childI].plays;
 
-	auto res = montecarlo(ourSide, ucbs, depth + 1, childI);
+	auto res = montecarlo(ourSide, ucbs, depth - 1, childI, baseGames);
 	
 	cur.wins[0] += std::get<0>(res);
 	cur.wins[1] += std::get<1>(res);
