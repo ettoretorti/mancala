@@ -157,6 +157,21 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 		return std::make_tuple((uint32_t)baseGames, (uint32_t)baseGames);
 	}
 
+	// The game is over for another reason ;)
+	if(cur.board.stonesInWell(SOUTH) > 49) {
+		cur.plays += 2 * baseGames;
+		cur.wins[0] += 2 * baseGames;
+
+		return std::make_tuple(uint32_t(2 * baseGames), uint32_t(0));
+	}
+
+	if(cur.board.stonesInWell(NORTH) > 49) {
+		cur.plays += 2 * baseGames;
+		cur.wins[1] += 2 * baseGames;
+
+		return std::make_tuple(uint32_t(0), uint32_t(2 * baseGames));
+	}
+
 	if(depth == 0) {
 		uint32_t wins[2] = { 0 };
 
@@ -165,14 +180,20 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 			g.movesPlayed() = 3; // to avoid switching
 			g.toMove() = toMove;
 
-			g.playAll();
+			while(g.board().stonesInWell(SOUTH) <= 49 && g.board().stonesInWell(NORTH) <= 49 && !g.isOver()) g.stepTurn();
 			
-			int diff = g.scoreDifference();
-			if(diff > 0) wins[0] += 2;
-			if(diff < 0) wins[1] += 2;
-			if(diff == 0) {
-				wins[0]++;
-				wins[1]++;
+			if(g.board().stonesInWell(SOUTH) > 49) {
+				wins[0] += 2;
+			} else if(g.board().stonesInWell(NORTH) > 49) {
+				wins[1] += 2;
+			} else {
+				int diff = g.scoreDifference();
+				if(diff > 0) wins[0] += 2;
+				if(diff < 0) wins[1] += 2;
+				if(diff == 0) {
+					wins[0]++;
+					wins[1]++;
+				}
 			}
 		}
 
