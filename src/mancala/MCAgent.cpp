@@ -62,8 +62,8 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 	using namespace std::chrono;
 
 	// look at notes/WHEN_TO_PIE for details
-	if(movesSoFar == 0) return std::make_pair(6, 0.5);
-	if(movesSoFar == 1 && (lastMove == 0 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return std::make_pair(7, 0.5);
+	if(movesSoFar == 0) return std::make_pair(0, 492.5/507.5);
+	if(movesSoFar == 1 && (lastMove == 1 || lastMove == 3 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return std::make_pair(7, 0.5);
 
 	auto ucbs = std::unique_ptr<UCB[]>(new UCB[ipow(7, depth_)]);
 	
