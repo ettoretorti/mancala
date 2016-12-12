@@ -1,5 +1,4 @@
 #include <mancala/Board.hpp>
-#include <mancala/Book.hpp>
 #include <mancala/MCAgent.hpp>
 
 #include <iostream>
