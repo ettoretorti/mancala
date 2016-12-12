@@ -34,30 +34,13 @@ void gen_positions_split(size_t depth, Side whosTurn, const Board& b, std::vecto
 
 	size_t nMoves;
 	const auto* moves = b.validMoves(whosTurn, nMoves);
-	bool firstMove = whosTurn == SOUTH && b.stonesInWell(NORTH) == 0;
+	bool firstMove = (whosTurn == SOUTH) && (b.stonesInWell(SOUTH) == 0);
 	
 	for(size_t i = 0; i < nMoves; i++) {
 		Board tmp = b;
 		bool again = tmp.makeMove(whosTurn, moves[i]);
 
 		gen_positions_split(depth - 1, (again && !firstMove) ? whosTurn : (Side)(((int)whosTurn)^1), tmp, sb, nb);
-	}
-}
-
-void gen_positions(size_t depth, Side whosTurn, const Board& b, std::vector<std::pair<Board, Side>>& acc) {
-	if(depth == 0) {
-		acc.push_back(std::make_pair(b, whosTurn));
-		return;
-	}
-
-	size_t nMoves;
-	const auto* moves = b.validMoves(whosTurn, nMoves);
-	
-	for(size_t i = 0; i < nMoves; i++) {
-		Board tmp = b;
-		bool again = tmp.makeMove(whosTurn, moves[i]);
-
-		gen_positions(depth - 1, again ? whosTurn : (Side)(((int)whosTurn)^1), tmp, acc);
 	}
 }
 
@@ -103,6 +86,8 @@ std::pair<float, float> fillBook(const Board& pos, Side cur, size_t depthLeft, V
 			return std::make_pair(1.0 - val, val);
 		}
 	}
+
+	bool firstMove = (cur == SOUTH) && (pos.stonesInWell(SOUTH) == 0);
 	
 	uint8_t bestMove = moves[0];
 	float bestVal = -1.0/0.0;
@@ -111,7 +96,7 @@ std::pair<float, float> fillBook(const Board& pos, Side cur, size_t depthLeft, V
 	for(size_t i = 0; i < nMoves; i++) {
 		Board cpy = pos;
 		bool ga = cpy.makeMove(cur, moves[i]);
-		auto res = fillBook(cpy, ga ? cur : Side(int(cur)^1), depthLeft - 1, sVals, nVals, sMoves, noMoves);
+		auto res = fillBook(cpy, (!firstMove && ga) ? cur : Side(int(cur)^1), depthLeft - 1, sVals, nVals, sMoves, noMoves);
 
 		float scores[2] = { res.first, res.second };
 		float ours = scores[int(cur)];
@@ -124,7 +109,7 @@ std::pair<float, float> fillBook(const Board& pos, Side cur, size_t depthLeft, V
 	}
 
 	//pie here
-	if(cur == NORTH && pos.stonesInWell(NORTH) == 0) {
+	if(cur == NORTH && pos.stonesInWell(NORTH) == 0 && bestVal < 0.5) {
 		noMoves[pos] = 7;
 		return std::make_pair(bestRes.second, bestRes.first);
 	}
@@ -156,22 +141,27 @@ int main() {
 
 	std::cout << southLeaves.size() << " initial south leaves at depth " << depth << std::endl;
 	std::cout << northLeaves.size() << " initial north leaves at depth " << depth << std::endl;
+	std::cout << std::endl;
 
 	#pragma omp parallel for schedule(dynamic)
 	for(size_t i = 0; i < southLeaves.size(); i++) {
 		MCAgent gg;
 		southValues[i] = gg.makeMoveAndScore(southLeaves[i], SOUTH, 10, 0).second;
+
+		if(i % 16 == 0) std::cout << "Calculated values for " << float(i)/southLeaves.size() << "% of south leaves" << std::endl;
 	}
 
-	std::cout << "Done calculating values for south leaves" << std::endl;
+	std::cout << "Done calculating values for south leaves\n" << std::endl;
 
 	#pragma omp parallel for schedule(dynamic)
 	for(size_t i = 0; i < northLeaves.size(); i++) {
 		MCAgent gg;
 		northValues[i] = gg.makeMoveAndScore(northLeaves[i], NORTH, 10, 0).second;
+		
+		if(i % 16 == 0) std::cout << "Calculated values for " << float(i)/southLeaves.size() << "% of north leaves" << std::endl;
 	}
 
-	std::cout << "Done calculating values for north leaves" << std::endl;
+	std::cout << "Done calculating values for north leaves\n" << std::endl;
 
 	std::unordered_map<Board, float> southMap;
 	std::unordered_map<Board, float> northMap;
@@ -190,7 +180,7 @@ int main() {
 	std::unordered_map<Board, uint8_t> northFin;
 	fillBook(b, SOUTH, depth, southMap, northMap, southFin, northFin);
 
-	std::cout << "Done filling books" << std::endl;
+	std::cout << "Done filling books\n" << std::endl;
 	
 	// This will break on big endian systems #YOLO
 	uint32_t sSize = southFin.size();
