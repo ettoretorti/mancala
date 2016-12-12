@@ -13,10 +13,13 @@ static thread_local Game g(new FinalAgent(), new FinalAgent());
 
 int main() {
 	Board boards[7];
+	Side toMove[7];
 
 	for(uint8_t i = 0; i < 7; i++) {
 		boards[i].reset();
-		boards[i].makeMove(SOUTH, i);
+		boards[i].makeMove(SOUTH, 0);
+		bool ga = boards[i].makeMove(NORTH, i);
+		toMove[i] = ga ? NORTH : SOUTH;
 	}
 
 	uint64_t southWins[7] = { 0 };
@@ -33,7 +36,7 @@ int main() {
 			for(size_t k = 0; k < GAMES_PER_CHUNK; k++) {
 				g.board() = boards[i];
 				g.movesPlayed() = 3; // no more additional switching
-				g.toMove() = NORTH;
+				g.toMove() = toMove[i];
 
 				while(g.board().stonesInWell(SOUTH) <= 49 && g.board().stonesInWell(NORTH) <= 49 && !g.isOver()) g.stepTurn();
 				
