@@ -121,7 +121,7 @@ int main() {
 		MCAgent gg;
 		southValues[i] = gg.makeMoveAndScore(southLeaves[i], SOUTH, 10, 0).second;
 
-		if(i % 16 == 0) std::cout << "Calculated values for " << float(i)/southLeaves.size() << "% of south leaves" << std::endl;
+		if(i % 16 == 0) std::cout << "Calculated values for " << 100.0 * float(i)/southLeaves.size() << "% of south leaves" << std::endl;
 	}
 
 	std::cout << "Done calculating values for south leaves\n" << std::endl;
@@ -131,7 +131,7 @@ int main() {
 		MCAgent gg;
 		northValues[i] = gg.makeMoveAndScore(northLeaves[i], NORTH, 10, 0).second;
 		
-		if(i % 16 == 0) std::cout << "Calculated values for " << float(i)/southLeaves.size() << "% of north leaves" << std::endl;
+		if(i % 16 == 0) std::cout << "Calculated values for " << 100.0 * float(i)/northLeaves.size() << "% of north leaves" << std::endl;
 	}
 
 	std::cout << "Done calculating values for north leaves\n" << std::endl;
