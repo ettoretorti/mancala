@@ -18,7 +18,6 @@ public:
 	void reset();
 	void recalcMoves();
 
-	uint8_t totalStones(Side side) const;
 	uint8_t stonesInHole(Side side, size_t holeNo) const;
 	uint8_t stonesInWell(Side side) const;
 	
@@ -42,8 +41,6 @@ private:
 	uint8_t sMoves_[7];
 	uint8_t noNMoves_;
 	uint8_t noSMoves_;
-	uint8_t noNStones_;
-	uint8_t noSStones_;
 
 	void addMove(Side side, size_t holeNo);
 	void placeAStone(Side curSide, uint8_t curHole);

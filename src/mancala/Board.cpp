@@ -70,11 +70,6 @@ uint8_t Board::stonesInHole(Side side, size_t holeNo) const {
 	return side == SOUTH ? sHoles_[holeNo] : nHoles_[holeNo];
 }
 
-uint8_t Board::totalStones(Side side) const {
-	assert(side == SOUTH || side == NORTH);
-	return  side == SOUTH ? noSStones_ : noNStones_;
-}
-
 uint8_t Board::stonesInWell(Side side) const {
 	assert(side == SOUTH || side == NORTH);
 	
@@ -100,12 +95,10 @@ void Board::addMove(Side side, size_t holeNo) {
 
 	uint8_t* arr    = side == SOUTH ? sMoves_ : nMoves_;
 	uint8_t& nMoves = side == SOUTH ? noSMoves_ : noNMoves_;
-	uint8_t& nStones = side == SOUTH ? noSStones_ : noNStones_;
 
 	for(uint8_t i = 0; i < nMoves; i++) {
 		if(arr[i] == holeNo) return;
 	}
-	nStones++;
 	arr[nMoves++] = holeNo;
 }
 
@@ -115,7 +108,6 @@ void Board::removeMove(Side side, size_t holeNo) {
 	
 	uint8_t* arr    = side == SOUTH ? sMoves_ : nMoves_;
 	uint8_t& nMoves = side == SOUTH ? noSMoves_ : noNMoves_;
-	uint8_t& nStones = side == SOUTH ? noSStones_ : noNStones_;
 
 	for(uint8_t i = 0; i < nMoves; i++) {
 		if(arr[i] == holeNo) {
@@ -124,7 +116,6 @@ void Board::removeMove(Side side, size_t holeNo) {
 			break;
 		}
 	}
-	nStones--;
 }
 
 void Board::placeAStone(Side curSide, uint8_t curHole){

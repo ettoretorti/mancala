@@ -3,7 +3,9 @@
 #include "RandomAgent.hpp"
 #include "Game.hpp"
 
+#include <cassert>
 #include <random>
+#include <limits>
 #include <memory>
 #include <cmath>
 #include <tuple>
@@ -11,8 +13,8 @@
 
 struct UCB {
 	Board board;
-	uint32_t plays = 0;
-	uint32_t wins[2] = { 0 };
+	uint64_t plays = 0;
+	uint64_t wins[2] = { 0 };
 	Side whosTurn;
 };
 
@@ -62,13 +64,22 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 	using namespace std::chrono;
 
 	// look at notes/WHEN_TO_PIE for details
-	if(movesSoFar == 0) return std::make_pair(6, 0.5);
-	if(movesSoFar == 1 && (lastMove == 0 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return std::make_pair(7, 0.5);
+	if(movesSoFar == 0) return std::make_pair(0, 492.5/507.5);
+	if(movesSoFar == 1 && (lastMove == 1 || lastMove == 3 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return std::make_pair(7, 0.5);
+
+	// instant win/loss
+	if(b.stonesInWell(s) > 49) {
+		return std::make_pair(RandomAgent().makeMove(b, s, movesSoFar, lastMove), 1.0);
+	}
+	if(b.stonesInWell(Side(int(s)^1)) > 49) {
+		return std::make_pair(RandomAgent().makeMove(b, s, movesSoFar, lastMove), 0.0);
+	}
 
 	auto ucbs = std::unique_ptr<UCB[]>(new UCB[ipow(7, depth_)]);
 	
 	size_t nMoves;
 	const uint8_t* moves = b.validMoves(s, nMoves);
+	assert(nMoves > 0);
 	
 	ucbs[0].board = b;
 	ucbs[0].whosTurn = s;
@@ -99,13 +110,16 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 
 	}
 
-	size_t bestMove = 0;
-	double bestScore = -1.0/0.0;
+	size_t bestMove = moves[0];
+	double bestScore = -std::numeric_limits<double>::infinity();
+	size_t mostPlays = 0;
 
 	for(size_t i = 0; i < nMoves; i++) {
 		double score = ucbs[moves[i] + 1].wins[(int)s] / (double) ucbs[moves[i] + 1].plays;
+		size_t plays = ucbs[moves[i] + 1].plays;
 
-		if(score > bestScore) {
+		if(plays > mostPlays) {
+			mostPlays = plays;
 			bestScore = score;
 			bestMove = moves[i];
 		}
@@ -123,41 +137,7 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 	Side toMove = cur.whosTurn;
 	Side opp = opposite(toMove);
 
-
-	size_t nMoves;
-	const auto* moves = cur.board.validMoves(toMove, nMoves);
-
-	// The game is over
-	if(nMoves == 0) {
-		//cleanup for the opponent
-		for(uint8_t i = 0; i < 7; i++) {
-			cur.board.stonesInWell(opp) += cur.board.stonesInHole(toMove, i);
-			cur.board.stonesInHole(toMove, i) = 0;
-		}
-
-		//determine who won and update accordingly
-		uint8_t southScore = cur.board.stonesInWell(SOUTH);
-		uint8_t northScore = cur.board.stonesInWell(NORTH);
-
-		cur.plays+= 2 * baseGames;
-
-		if(southScore > northScore) {
-			cur.wins[0] += 2 * baseGames;
-			return std::make_tuple((uint32_t)baseGames, 0u);
-		}
-
-		if(southScore < northScore) {
-			cur.wins[1] +=  2 * baseGames;
-			return std::make_tuple(0u, (uint32_t)baseGames);
-		}
-
-		cur.wins[0] += baseGames;
-		cur.wins[1] += baseGames;
-
-		return std::make_tuple((uint32_t)baseGames, (uint32_t)baseGames);
-	}
-
-	// The game is over for another reason ;)
+	// Guaranteed win/loss ;)
 	if(cur.board.stonesInWell(SOUTH) > 49) {
 		cur.plays += 2 * baseGames;
 		cur.wins[0] += 2 * baseGames;
@@ -170,6 +150,33 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 		cur.wins[1] += 2 * baseGames;
 
 		return std::make_tuple(uint32_t(0), uint32_t(2 * baseGames));
+	}
+
+	size_t nMoves;
+	const auto* moves = cur.board.validMoves(toMove, nMoves);
+
+	// The game is over
+	if(nMoves == 0) {
+		//determine who won and update accordingly
+		uint8_t scores[2] = { cur.board.stonesInWell(SOUTH), cur.board.stonesInWell(NORTH) };
+		scores[opp] += 98 - scores[0] - scores[1];
+
+		cur.plays+= 2 * baseGames;
+
+		if(scores[0] > scores[1]) {
+			cur.wins[0] += 2 * baseGames;
+			return std::make_tuple((uint32_t)2 * baseGames, 0u);
+		}
+
+		if(scores[0] < scores[1]) {
+			cur.wins[1] +=  2 * baseGames;
+			return std::make_tuple(0u, (uint32_t)2 * baseGames);
+		}
+
+		cur.wins[0] += baseGames;
+		cur.wins[1] += baseGames;
+
+		return std::make_tuple((uint32_t)baseGames, (uint32_t)baseGames);
 	}
 
 	if(depth == 0) {
@@ -230,8 +237,8 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 	}
 	
 	// go by max bound otherwise
-	double logTotal = 1.0 * log(cur.plays);
-	double  max = -1.0/0.0;
+	double logTotal = 2.0 * log(cur.plays);
+	double max = -std::numeric_limits<double>::infinity();
 	size_t move = moves[0];
 
 	for(size_t i = 0; i < nMoves; i++) {
@@ -247,7 +254,7 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 	}
 
 	size_t childI = childIdx(idx, move);
-	uint32_t curPlays = ucbs[childI].plays;
+	uint64_t curPlays = ucbs[childI].plays;
 
 	auto res = montecarlo(ourSide, ucbs, depth - 1, childI, baseGames);
 	
