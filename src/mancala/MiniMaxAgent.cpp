@@ -1,6 +1,7 @@
 #include "MiniMaxAgent.hpp"
 
 #include <utility>
+#include <stdlib.h>
 #include <iostream>
 #include <cassert>
 #include <vector>
@@ -15,7 +16,8 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_
 	size_t nMoves;
 	auto* moves = b.validMoves(s, nMoves);
 	assert(nMoves > 0);
-
+	if(b.stonesInWell(s) > 49)
+		return moves[rand() % 6];
 	Side toMove = s;
 	Side yourSide = s;
 	uint8_t depth = 12;

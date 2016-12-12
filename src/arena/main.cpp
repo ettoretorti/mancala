@@ -8,8 +8,8 @@
 int main() {
 	//Agent* p1 = new MiniMaxAgent();
 	//Agent* p1 = new UserAgent();
-	Agent* p1 = new RandomAgent();
-	Agent* p2 = new MiniMaxAgent();
+	Agent* p1 = new MiniMaxAgent();
+	Agent* p2 = new MCAgent();
 
 	bool printIntermediate = true;
 
