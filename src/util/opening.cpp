@@ -44,33 +44,6 @@ void gen_positions_split(size_t depth, Side whosTurn, const Board& b, std::vecto
 	}
 }
 
-std::pair<uint8_t, float> calcValue(const Board& pos, Side s, const std::unordered_map<std::pair<Board, Side>, std::pair<uint8_t, float>>& vv) {
-	auto it = vv.find(std::make_pair(pos, s));
-	if(it != vv.end()) {
-		return it->second;
-	}
-	
-	size_t nMoves;
-	const auto* moves = pos.validMoves(s, nMoves);
-
-	std::pair<uint8_t, float> bestVal = std::make_pair(moves[0], -1.0/0.0);
-
-	for(size_t i = 0; i < nMoves; i++) {
-		Board cpy = pos;
-		bool ga = cpy.makeMove(s, moves[i]);
-
-		auto val = ga ? calcValue(cpy, s, vv) : calcValue(cpy, Side(int(s)^1), vv);
-		val.first = moves[i];
-		if(!ga) val.second = 1.0 - val.second;
-
-		if(val.second > bestVal.second) {
-			bestVal = val;
-		}
-	}
-
-	return bestVal;
-}
-
 typedef std::unordered_map<Board, float> ValMap;
 typedef std::unordered_map<Board, uint8_t> MoveMap;
 std::pair<float, float> fillBook(const Board& pos, Side cur, size_t depthLeft, ValMap& sVals, ValMap& nVals, MoveMap& sMoves, MoveMap& noMoves) {
