@@ -3,7 +3,9 @@
 #include "RandomAgent.hpp"
 #include "Game.hpp"
 
+#include <cassert>
 #include <random>
+#include <limits>
 #include <memory>
 #include <cmath>
 #include <tuple>
@@ -65,10 +67,19 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 	if(movesSoFar == 0) return std::make_pair(0, 492.5/507.5);
 	if(movesSoFar == 1 && (lastMove == 1 || lastMove == 3 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return std::make_pair(7, 0.5);
 
+	// instant win/loss
+	if(b.stonesInWell(s) > 49) {
+		return std::make_pair(RandomAgent().makeMove(b, s, movesSoFar, lastMove), 1.0);
+	}
+	if(b.stonesInWell(Side(int(s)^1)) > 49) {
+		return std::make_pair(RandomAgent().makeMove(b, s, movesSoFar, lastMove), 0.0);
+	}
+
 	auto ucbs = std::unique_ptr<UCB[]>(new UCB[ipow(7, depth_)]);
 	
 	size_t nMoves;
 	const uint8_t* moves = b.validMoves(s, nMoves);
+	assert(nMoves > 0);
 	
 	ucbs[0].board = b;
 	ucbs[0].whosTurn = s;
@@ -99,8 +110,8 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 
 	}
 
-	size_t bestMove = 0;
-	double bestScore = -1.0/0.0;
+	size_t bestMove = moves[0];
+	double bestScore = -std::numeric_limits<double>::infinity();
 	size_t mostPlays = 0;
 
 	for(size_t i = 0; i < nMoves; i++) {
@@ -227,7 +238,7 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 	
 	// go by max bound otherwise
 	double logTotal = 2.0 * log(cur.plays);
-	double  max = -1.0/0.0;
+	double max = -std::numeric_limits<double>::infinity();
 	size_t move = moves[0];
 
 	for(size_t i = 0; i < nMoves; i++) {
