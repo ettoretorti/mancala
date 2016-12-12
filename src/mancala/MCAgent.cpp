@@ -11,8 +11,8 @@
 
 struct UCB {
 	Board board;
-	uint32_t plays = 0;
-	uint32_t wins[2] = { 0 };
+	uint64_t plays = 0;
+	uint64_t wins[2] = { 0 };
 	Side whosTurn;
 };
 
@@ -101,11 +101,14 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 
 	size_t bestMove = 0;
 	double bestScore = -1.0/0.0;
+	size_t mostPlays = 0;
 
 	for(size_t i = 0; i < nMoves; i++) {
 		double score = ucbs[moves[i] + 1].wins[(int)s] / (double) ucbs[moves[i] + 1].plays;
+		size_t plays = ucbs[moves[i] + 1].plays;
 
-		if(score > bestScore) {
+		if(plays > mostPlays) {
+			mostPlays = plays;
 			bestScore = score;
 			bestMove = moves[i];
 		}
@@ -151,12 +154,12 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 
 		if(scores[0] > scores[1]) {
 			cur.wins[0] += 2 * baseGames;
-			return std::make_tuple((uint32_t)baseGames, 0u);
+			return std::make_tuple((uint32_t)2 * baseGames, 0u);
 		}
 
 		if(scores[0] < scores[1]) {
 			cur.wins[1] +=  2 * baseGames;
-			return std::make_tuple(0u, (uint32_t)baseGames);
+			return std::make_tuple(0u, (uint32_t)2 * baseGames);
 		}
 
 		cur.wins[0] += baseGames;
@@ -223,7 +226,7 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 	}
 	
 	// go by max bound otherwise
-	double logTotal = 1.0 * log(cur.plays);
+	double logTotal = 2.0 * log(cur.plays);
 	double  max = -1.0/0.0;
 	size_t move = moves[0];
 
@@ -240,7 +243,7 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 	}
 
 	size_t childI = childIdx(idx, move);
-	uint32_t curPlays = ucbs[childI].plays;
+	uint64_t curPlays = ucbs[childI].plays;
 
 	auto res = montecarlo(ourSide, ucbs, depth - 1, childI, baseGames);
 	
