@@ -89,6 +89,10 @@ if(BUILD_UTILS)
     add_executable(opening "src/util/opening.cpp")
     target_link_libraries(opening mancala)
     target_include_directories(opening PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+    add_executable(testbinbooks "src/util/testbinbooks.cpp")
+    target_link_libraries(testbinbooks mancala)
+    target_include_directories(testbinbooks PRIVATE ${CMAKE_SOURCE_DIR}/src)
 endif()
 
 # Agent wars
