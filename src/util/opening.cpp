@@ -84,12 +84,15 @@ std::pair<float, float> fillBook(const Board& pos, Side cur, size_t depthLeft, V
 	//pie here
 	if(cur == NORTH && pos.stonesInWell(NORTH) == 0 && bestVal < 0.5) {
 		noMoves[pos] = 7;
+		nVals[pos] = 1.0 - bestVal;
 		return std::make_pair(bestRes.second, bestRes.first);
 	}
 
 	if(cur == SOUTH) {
+		sVals[pos] = bestVal;
 		sMoves[pos] = bestMove;
 	} else {
+		nVals[pos] = bestVal;
 		noMoves[pos] = bestMove;
 	}
 
@@ -98,10 +101,6 @@ std::pair<float, float> fillBook(const Board& pos, Side cur, size_t depthLeft, V
 
 int main() {
 	const size_t depth = 4;
-	std::fstream nOut;
-	nOut.open("nbook.bin", std::ios::out);
-	std::fstream sOut;
-	sOut.open("sbook.bin", std::ios::out);
 
 	Board b;
 	b.reset();
@@ -142,7 +141,7 @@ int main() {
 	for(size_t i = 0; i < southLeaves.size(); i++) {
 		southMap[southLeaves[i]] = southValues[i];
 	}
-	
+
 	for(size_t i = 0; i < northLeaves.size(); i++) {
 		northMap[northLeaves[i]] = northValues[i];
 	}
@@ -154,7 +153,17 @@ int main() {
 	fillBook(b, SOUTH, depth, southMap, northMap, southFin, northFin);
 
 	std::cout << "Done filling books\n" << std::endl;
-	
+
+	std::fstream nOut;
+	nOut.open("nbook.bin", std::ios::out);
+	std::fstream sOut;
+	sOut.open("sbook.bin", std::ios::out);
+
+	std::fstream nVOut;
+	nVOut.open("nvbook.bin", std::ios::out);
+	std::fstream sVOut;
+	sVOut.open("svbook.bin", std::ios::out);
+
 	// This will break on big endian systems #YOLO
 	uint32_t sSize = southFin.size();
 	sOut.write((char*)&sSize, sizeof(uint32_t));
@@ -172,7 +181,25 @@ int main() {
 		nOut.write((char*)&entry.second, 1);
 	}
 
-	std::cout << "Saved " << nSize << " entries for north" << std::endl;
+	std::cout << "Saved " << nSize << " entries for north\n" << std::endl;
+
+	sSize = southMap.size();
+	sVOut.write((char*)&sSize, sizeof(uint32_t));
+	for(const auto& entry : southMap) {
+		sVOut.write((char*)&entry.first, 16);
+		sVOut.write((char*)&entry.second, sizeof(float));
+	}
+
+	std::cout << "Saved " << sSize << " values for south" << std::endl;
+
+	nSize = northMap.size();
+	nVOut.write((char*)&nSize, sizeof(uint32_t));
+	for(const auto& entry : northMap) {
+		nVOut.write((char*)&entry.first, 16);
+		nVOut.write((char*)&entry.second, sizeof(float));
+	}
+
+	std::cout << "Saved " << nSize << " values for north" << std::endl;
 	
 	return 0;
 }
