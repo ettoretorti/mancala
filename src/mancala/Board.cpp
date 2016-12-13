@@ -133,6 +133,9 @@ void Board::removeAStone(Side curSide, uint8_t curHole){
 }
 
 bool __attribute__((hot)) Board::makeMove(Side side, size_t holeNo) {
+	assert(holeNo < 7);
+	assert(stonesInHole(side, holeNo) > 0);
+
 	// ╔> 7 PLAYER HOLES ═> PLAYER WELL ═> 7 OPPONENT HOLES ╗
 	// ╚════════════════════════════════════════════════════╝
 
