@@ -118,6 +118,8 @@ int main() {
 	#pragma omp parallel for schedule(dynamic)
 	for(size_t i = 0; i < southLeaves.size(); i++) {
 		MCAgent gg;
+		gg.timePerMove() = 20.0;
+		gg.useIterations() = false;
 		southValues[i] = gg.makeMoveAndScore(southLeaves[i], SOUTH, 10, 0).second;
 
 		if(i % 16 == 0) std::cout << "Calculated values for " << 100.0 * float(i)/southLeaves.size() << "% of south leaves" << std::endl;
@@ -128,6 +130,8 @@ int main() {
 	#pragma omp parallel for schedule(dynamic)
 	for(size_t i = 0; i < northLeaves.size(); i++) {
 		MCAgent gg;
+		gg.timePerMove() = 20.0;
+		gg.useIterations() = false;
 		northValues[i] = gg.makeMoveAndScore(northLeaves[i], NORTH, 10, 0).second;
 		
 		if(i % 16 == 0) std::cout << "Calculated values for " << 100.0 * float(i)/northLeaves.size() << "% of north leaves" << std::endl;
