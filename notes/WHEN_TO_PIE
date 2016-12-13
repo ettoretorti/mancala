@@ -1,6 +1,6 @@
 Here are the results of 1000 monte carlo games played after all 7 possible starting moves.
 
-//OLD
+//OLDER
 When first move is 0 SOUTH=576 NORTH=402 DIFF=0.174
 When first move is 1 SOUTH=418 NORTH=558 DIFF=-0.14
 When first move is 2 SOUTH=360 NORTH=616 DIFF=-0.256
@@ -9,7 +9,7 @@ When first move is 4 SOUTH=659 NORTH=318 DIFF=0.341
 When first move is 5 SOUTH=563 NORTH=414 DIFF=0.149
 When first move is 6 SOUTH=495 NORTH=482 DIFF=0.013
 
-//LATEST
+//OLD
 When first move is 0 SOUTH=492.5 NORTH=507.5 DIFF=-0.015
 When first move is 1 SOUTH=556   NORTH=444   DIFF=0.112
 When first move is 2 SOUTH=393   NORTH=607   DIFF=-0.214
@@ -18,8 +18,35 @@ When first move is 4 SOUTH=529.5 NORTH=470.5 DIFF=0.059
 When first move is 5 SOUTH=550   NORTH=450   DIFF=0.1
 When first move is 6 SOUTH=453   NORTH=547   DIFF=-0.094
 
+//LATEST
+When south makes 0 north responds with 0
+When south makes 0 north has value 0.591734
+When south makes 1 north responds with 7
+When south makes 1 north has value 0.541728
+When south makes 2 north responds with 7
+When south makes 2 north has value 0.549438
+When south makes 3 north responds with 7
+When south makes 3 north has value 0.539104
+When south makes 4 north responds with 7
+When south makes 4 north has value 0.537957
+When south makes 5 north responds with 7
+When south makes 5 north has value 0.524256
+When south makes 6 north responds with 7
+When south makes 6 north has value 0.526552
+South first's move should be 5
+
 Summary
 =======
-Go for a swap as player 2 whenever player 1's first move is 1,3,4,5,6.
+Go for a swap as player 2 whenever player 1's first move was not 0
 
-Always start with move 0 as player 1 to minimize the potential advantage handed over to player 2.
+Always start with move 5 as player 1 to minimize the potential advantage handed over to player 2.
+
+
+// For north to move after S0:
+When first move is 0 SOUTH=450.5 NORTH=549.5 DIFF=-0.099
+When first move is 1 SOUTH=612.5 NORTH=387.5 DIFF=0.225
+When first move is 2 SOUTH=624.5 NORTH=375.5 DIFF=0.249
+When first move is 3 SOUTH=630 NORTH=370 DIFF=0.26
+When first move is 4 SOUTH=362.5 NORTH=637.5 DIFF=-0.275
+When first move is 5 SOUTH=612 NORTH=388 DIFF=0.224
+When first move is 6 SOUTH=638 NORTH=362 DIFF=0.276
