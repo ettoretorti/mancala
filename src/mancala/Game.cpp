@@ -80,7 +80,7 @@ bool& Game::takeTimings() {
 	return takeTimings_;
 }
 
-void Game::stepTurn() {
+void __attribute__((hot)) Game::stepTurn() {
 	using namespace std::chrono;
 
 	assert(!isOver());
