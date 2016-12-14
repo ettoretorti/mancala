@@ -75,9 +75,9 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side toMove, B
 
 	// Someone Can Reach A Certain Win
 	if(b.stonesInWell(SOUTH) > 49)
-		return std::make_pair(0, 1.0/0.0);
+		return std::make_pair(moves[0], 1.0/0.0);
 	else if(b.stonesInWell(NORTH) > 49)
-		return std::make_pair(0, -1.0/0.0);
+		return std::make_pair(moves[0], -1.0/0.0);
 
 	// We Have Reached the Maximum Depth
 	if(depth == 0){
