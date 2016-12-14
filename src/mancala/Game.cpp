@@ -90,7 +90,7 @@ void Game::stepTurn() {
 	int playerToMove = toMove_ == SOUTH && !sidesSwapped_ ? 1 :
 	                   toMove_ == NORTH && !sidesSwapped_ ? 2 :
 	                   toMove_ == SOUTH &&  sidesSwapped_ ? 2 :
-	                                                       1;  
+	                                                        1;  
 	
 	uint8_t move;
 
@@ -124,8 +124,7 @@ void Game::stepTurn() {
 			}
 			assert(moveValid);
 		#endif
-		if(!board_.makeMove(toMove_, move) || movesPlayed_ == 0)
-			toMove_ = (Side)((int)toMove_^1);
+		toMove_ = (board_.makeMove(toMove_, move) && movesPlayed_ > 0) ? toMove_ : Side(int(toMove_)^1);
 	}
 
 	lastMove_ = move;
@@ -141,9 +140,9 @@ int Game::scoreDifference() {
 
 	//clean up the board by giving the winning player all the remaining stones
 	Side winner = (Side)((int)toMove_^1);
+	board_.stonesInWell(winner) += 98 - board_.stonesInWell(SOUTH) - board_.stonesInWell(NORTH);
 
 	for(size_t i = 0; i < 7; i++) {
-		board_.stonesInWell(winner) += board_.stonesInHole(winner, i);
 		board_.stonesInHole(winner, i) = 0;
 	}
 
