@@ -24,7 +24,7 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_
 
 	// The game is already over
 	if(b.stonesInWell(s) > 49)
-		return moves[rand() % 6];
+		return moves[rand() % nMoves];
 
 	Side toMove = s;
 	Side yourSide = s;
@@ -70,7 +70,7 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Side y
 
 	// We Have Reached the Maximum Depth
 	if(depth == 0)
-		return std::make_pair(0, b.stonesInWell(yourSide) - b.stonesInWell(opponentSide));
+		return std::make_pair(0, (double)b.stonesInWell(yourSide) - (double)b.stonesInWell(opponentSide));
 	
 	// MAXIMIZE
 	if(toMove == yourSide){
@@ -84,12 +84,12 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Side y
 		if(depth > 3){
 			// Check Swap
 			if(movesSoFar == 1)
-				possibleMoves[nMoves].second = b.stonesInWell(opponentSide) - b.stonesInWell(yourSide);
+				possibleMoves[nMoves].second = (double)b.stonesInWell(opponentSide) - (double)b.stonesInWell(yourSide);
 			// Check All Moves
 			for(uint8_t i = 0; i < nMoves; i++){
 				Board nCopy = b;
 				nCopy.makeMove(toMove, possibleMoves[i].first);
-				possibleMoves[i].second = nCopy.stonesInWell(yourSide) - nCopy.stonesInWell(opponentSide);
+				possibleMoves[i].second = (double)nCopy.stonesInWell(yourSide) - (double)nCopy.stonesInWell(opponentSide);
 			}
 
 			// Sort based on best payoff
@@ -147,12 +147,12 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Side y
 		if(depth > 3){
 			// Check Swap
 			if(movesSoFar == 1)
-				possibleMoves[nMoves].second = b.stonesInWell(opponentSide) - b.stonesInWell(yourSide);
+				possibleMoves[nMoves].second = (double)b.stonesInWell(opponentSide) - (double)b.stonesInWell(yourSide);
 			// Check All Moves
 			for(uint8_t i = 0; i < nMoves; i++){
 				Board nCopy = b;
 				nCopy.makeMove(toMove, possibleMoves[i].first);
-				possibleMoves[i].second = nCopy.stonesInWell(yourSide) - nCopy.stonesInWell(opponentSide);
+				possibleMoves[i].second = (double)nCopy.stonesInWell(yourSide) - (double)nCopy.stonesInWell(opponentSide);
 			}
 			// Sort based on best payoff
 			std::sort(std::begin(possibleMoves), std::begin(possibleMoves)+nMoves+1, pairCompare_minimize);

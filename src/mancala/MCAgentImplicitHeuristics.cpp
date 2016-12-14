@@ -115,7 +115,7 @@ std::pair<uint8_t, float> MCAgentImplicitHeuristics::makeMoveAndScore(const Boar
 	size_t mostPlays = 0;
 
 	for(size_t i = 0; i < nMoves; i++) {
-		double score = (ucbs[moves[i] + 1].wins[(int)s] / (double) ucbs[moves[i] + 1].plays) + ucbs[moves[i]+1].heuristic;
+		double score = ucbs[moves[i] + 1].wins[(int)s] / (double) ucbs[moves[i] + 1].plays;
 		size_t plays = ucbs[moves[i] + 1].plays;
 
 		if(plays > mostPlays) {
@@ -137,17 +137,18 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t
 	Side toMove = cur.whosTurn;
 	Side opp = opposite(toMove);
 
-	cur.heuristic += cur.board.stonesInWell(SOUTH) - cur.board.stonesInWell(NORTH);
 	// Guaranteed win/loss ;)
 	if(cur.board.stonesInWell(SOUTH) > 49) {
 		cur.plays += 2 * baseGames;
 		cur.wins[0] += 2 * baseGames;
+		cur.heuristic = 1.0;
 		return std::make_tuple(uint32_t(2 * baseGames), uint32_t(0));
 	}
 
 	if(cur.board.stonesInWell(NORTH) > 49) {
 		cur.plays += 2 * baseGames;
 		cur.wins[1] += 2 * baseGames;
+		cur.heuristic = 0.0;
 		return std::make_tuple(uint32_t(0), uint32_t(2 * baseGames));
 	}
 
@@ -161,15 +162,15 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t
 		scores[opp] += 98 - scores[0] - scores[1];
 
 		cur.plays+= 2 * baseGames;
-		cur.heuristic += (scores[0] - scores[1]);
-
 		if(scores[0] > scores[1]) {
 			cur.wins[0] += 2 * baseGames;
+			cur.heuristic = 1.0;
 			return std::make_tuple((uint32_t)2 * baseGames, 0u);
 		}
 
 		if(scores[0] < scores[1]) {
 			cur.wins[1] +=  2 * baseGames;
+			cur.heuristic = 0.0;
 			return std::make_tuple(0u, (uint32_t)2 * baseGames);
 		}
 
@@ -180,15 +181,12 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t
 
 	if(depth == 0) {
 		uint32_t wins[2] = { 0 };
-		double heuristic = 0.0;
 		for(size_t i = 0; i < baseGames; i++) {
 			g.board() = cur.board;
 			g.movesPlayed() = 3; // to avoid switching
 			g.toMove() = toMove;
 
 			while(g.board().stonesInWell(SOUTH) <= 49 && g.board().stonesInWell(NORTH) <= 49 && !g.isOver()) g.stepTurn();
-			
-			heuristic += (g.board().stonesInWell(SOUTH) - g.board().stonesInWell(NORTH));
 			if(g.board().stonesInWell(SOUTH) > 49) {
 				wins[0] += 2;
 			} else if(g.board().stonesInWell(NORTH) > 49) {
@@ -210,14 +208,13 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t
 		cur.plays += 2 * baseGames;
 		cur.wins[0] += wins[0];
 		cur.wins[1] += wins[1];
-		cur.heuristic += heuristic;
+		cur.heuristic = ((double)cur.board.stonesInWell(SOUTH) - (double)cur.board.stonesInWell(NORTH))/98.0;
 		return std::make_tuple(wins[0], wins[1]);
 	}
 	
 	// Populate children if necessary
 	if(cur.plays == 0) {
 		uint32_t wins[2] = { 0 };
-		double heuristic = 0.0;
 		for(size_t i = 0; i < nMoves; i++) {
 			uint8_t move = moves[i];
 			UCB child = ucbs[childIdx(idx, move)];
@@ -232,11 +229,10 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t
 			cur.plays += child.plays;
 			wins[0] += std::get<0>(res);
 			wins[1] += std::get<1>(res);
-			heuristic += child.heuristic;
 		}
 		cur.wins[0] += wins[0];
 		cur.wins[1] += wins[1];
-		cur.heuristic = heuristic;
+		cur.heuristic = ((double)cur.board.stonesInWell(SOUTH) - (double)cur.board.stonesInWell(NORTH))/98.0;
 		return std::make_tuple(wins[0], wins[1]);
 	}
 	
@@ -247,10 +243,9 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t
 
 	for(size_t i = 0; i < nMoves; i++) {
 		UCB child = ucbs[childIdx(idx, moves[i])];
-		
-		double bound = child.wins[(int)toMove] / (float) child.plays;
+		double heuristic = (toMove == NORTH? -1 : 1) * child.heuristic;
+		double bound = 0.9*(child.wins[(int)toMove] / (float) child.plays) + 0.1*heuristic;
 		bound += sqrt(logTotal / child.plays);
-		bound += child.heuristic;
 
 		if(bound > max) {
 			max = bound;
@@ -266,6 +261,6 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t
 	cur.wins[0] += std::get<0>(res);
 	cur.wins[1] += std::get<1>(res);
 	cur.plays += ucbs[childI].plays - curPlays;
-	cur.heuristic += ucbs[childI].heuristic;
+	cur.heuristic = ucbs[childI].heuristic;
 	return res;
 }
