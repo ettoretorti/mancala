@@ -14,11 +14,18 @@ static bool pairCompare(const std::pair<uint8_t, double>& firstElem, const std::
 static bool pairCompare_minimize(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem);
 
 uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
+	// Swap Logic
+	if(movesSoFar == 0) return 0;
+	if(movesSoFar == 1 && (lastMove == 1 || lastMove == 3 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return 7;
+
 	size_t nMoves;
 	auto* moves = b.validMoves(s, nMoves);
 	assert(nMoves > 0);
+
+	// The game is already over
 	if(b.stonesInWell(s) > 49)
 		return moves[rand() % 6];
+
 	Side toMove = s;
 	Side yourSide = s;
 	uint8_t depth = 12;
@@ -144,7 +151,7 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Side y
 			// Check All Moves
 			for(uint8_t i = 0; i < nMoves; i++){
 				Board nCopy = b;
-				bool goAgain = nCopy.makeMove(toMove, possibleMoves[i].first);
+				nCopy.makeMove(toMove, possibleMoves[i].first);
 				possibleMoves[i].second = nCopy.stonesInWell(yourSide) - nCopy.stonesInWell(opponentSide);
 			}
 			// Sort based on best payoff
