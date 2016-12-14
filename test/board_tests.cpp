@@ -224,7 +224,38 @@ TEST(Board, LastStoneInWell) {
 	}
 }
 
-TEST(Board, Capture) {
+TEST(Board, SimpleCapture) {
+	Board b;
+	b.clear();
+
+	auto nHole = [&](size_t i) -> uint8_t& { return b.stonesInHole(NORTH, i); };
+	auto sHole = [&](size_t i) -> uint8_t& { return b.stonesInHole(SOUTH, i); };
+
+	sHole(0) = 1;
+	nHole(5) = 69;
+	b.recalcMoves();
+
+	bool goAgain = b.makeMove(SOUTH, 0);
+
+	EXPECT_FALSE(goAgain);
+	EXPECT_EQ(70u, b.stonesInWell(SOUTH));
+	EXPECT_EQ(0u, b.stonesInWell(NORTH));
+
+	for(uint8_t i = 0; i < 7; i++) {
+		EXPECT_EQ(0u, sHole(i));
+		EXPECT_EQ(0u, nHole(i));
+	}
+
+	size_t nMoves;
+
+	b.validMoves(SOUTH, nMoves);
+	EXPECT_EQ(0u, nMoves);
+
+	b.validMoves(NORTH, nMoves);
+	EXPECT_EQ(0u, nMoves);
+}
+
+TEST(Board, WrapCapture) {
 	Board b;
 	b.clear();
 
