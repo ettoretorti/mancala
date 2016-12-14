@@ -11,8 +11,8 @@ public:
 	Game(std::unique_ptr<Agent> p1, std::unique_ptr<Agent> p2);
 	Game(Agent* p1, Agent* p2);
 
-	Board& board();
-	const Board& board() const;
+	inline Board& board() { return board_; }
+	inline const Board& board() const { return board_; }
 
 	Side& toMove();
 	Side toMove() const;
@@ -22,7 +22,7 @@ public:
 	// copies everything but the players
 	void copyState(const Game& other);
 
-	bool isOver() const;
+	inline bool isOver() const;
 	bool sidesSwapped() const;
 	bool& sidesSwapped();
 
@@ -59,3 +59,10 @@ private:
 	bool sidesSwapped_;
 	bool takeTimings_;
 };
+
+inline bool Game::isOver() const {
+	size_t nValidMoves;
+	board_.validMoves(toMove_, nValidMoves);
+
+	return nValidMoves == 0;
+}

@@ -14,14 +14,6 @@ Game::Game(Agent* p1, Agent* p2)
 	  toMove_(SOUTH), movesPlayed_(0), sidesSwapped_(false), takeTimings_(false)
 {}
 
-Board& Game::board() {
-	return board_;
-}
-
-const Board& Game::board() const {
-	return board_;
-}
-
 bool Game::sidesSwapped() const {
 	return sidesSwapped_;
 }
@@ -50,13 +42,6 @@ void Game::copyState(const Game& other) {
 	toMove_ = other.toMove_;
 	movesPlayed_ = other.movesPlayed_;
 	sidesSwapped_ = other.sidesSwapped_;
-}
-
-bool Game::isOver() const {
-	size_t nValidMoves;
-	board_.validMoves(toMove_, nValidMoves);
-
-	return nValidMoves == 0;
 }
 
 size_t Game::movesPlayed() const {
