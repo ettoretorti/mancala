@@ -7,6 +7,7 @@
 #include <random>
 #include <limits>
 #include <memory>
+#include <iostream>
 #include <cmath>
 #include <tuple>
 #include <chrono>
@@ -25,6 +26,10 @@ static size_t ipow(size_t base, size_t exp, size_t res = 1) {
 
 static inline Side opposite(Side s) {
 	return (Side)(((int)s) ^ 1);
+}
+
+static inline double sigmoid(double val) {
+	return 1.0/(1.0 + std::exp(val));
 }
 
 static inline size_t childIdx(size_t idx, size_t move) {
@@ -133,7 +138,7 @@ static thread_local Game g(new RandomAgent, new RandomAgent);
 
 // South score, north score
 static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t idx, size_t baseGames) {
-	UCB cur = ucbs[idx];
+	UCB& cur = ucbs[idx];
 	Side toMove = cur.whosTurn;
 	Side opp = opposite(toMove);
 
@@ -160,8 +165,8 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t
 		//determine who won and update accordingly
 		uint8_t scores[2] = { cur.board.stonesInWell(SOUTH), cur.board.stonesInWell(NORTH) };
 		scores[opp] += 98 - scores[0] - scores[1];
-
 		cur.plays+= 2 * baseGames;
+
 		if(scores[0] > scores[1]) {
 			cur.wins[0] += 2 * baseGames;
 			cur.heuristic = 1.0;
@@ -208,16 +213,16 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t
 		cur.plays += 2 * baseGames;
 		cur.wins[0] += wins[0];
 		cur.wins[1] += wins[1];
-		cur.heuristic = ((double)cur.board.stonesInWell(SOUTH) - (double)cur.board.stonesInWell(NORTH))/98.0;
+		cur.heuristic = sigmoid((double)cur.board.stonesInWell(SOUTH) - (double)cur.board.stonesInWell(NORTH)) * 0.5 + 0.5;
 		return std::make_tuple(wins[0], wins[1]);
 	}
-	
+
 	// Populate children if necessary
 	if(cur.plays == 0) {
 		uint32_t wins[2] = { 0 };
 		for(size_t i = 0; i < nMoves; i++) {
 			uint8_t move = moves[i];
-			UCB child = ucbs[childIdx(idx, move)];
+			UCB& child = ucbs[childIdx(idx, move)];
 
 			child.board = cur.board;
 			bool ga = child.board.makeMove(toMove, move);
@@ -232,7 +237,7 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t
 		}
 		cur.wins[0] += wins[0];
 		cur.wins[1] += wins[1];
-		cur.heuristic = ((double)cur.board.stonesInWell(SOUTH) - (double)cur.board.stonesInWell(NORTH))/98.0;
+		cur.heuristic = sigmoid((double)cur.board.stonesInWell(SOUTH) - (double)cur.board.stonesInWell(NORTH)) * 0.5 + 0.5;
 		return std::make_tuple(wins[0], wins[1]);
 	}
 	
@@ -242,8 +247,8 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t
 	size_t move = moves[0];
 
 	for(size_t i = 0; i < nMoves; i++) {
-		UCB child = ucbs[childIdx(idx, moves[i])];
-		double heuristic = (toMove == NORTH? -1 : 1) * child.heuristic;
+		UCB& child = ucbs[childIdx(idx, moves[i])];
+		double heuristic = (toMove == NORTH? 1-child.heuristic : child.heuristic);
 		double bound = 0.9*(child.wins[(int)toMove] / (float) child.plays) + 0.1*heuristic;
 		bound += sqrt(logTotal / child.plays);
 
