@@ -81,13 +81,6 @@ std::pair<float, float> fillBook(const Board& pos, Side cur, size_t depthLeft, V
 		}
 	}
 
-	//pie here
-	if(cur == NORTH && pos.stonesInWell(NORTH) == 0 && bestVal < 0.5) {
-		noMoves[pos] = 7;
-		nVals[pos] = 1.0 - bestVal;
-		return std::make_pair(bestRes.second, bestRes.first);
-	}
-
 	if(cur == SOUTH) {
 		sVals[pos] = bestVal;
 		sMoves[pos] = bestMove;
