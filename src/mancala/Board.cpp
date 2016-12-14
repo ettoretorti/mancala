@@ -92,14 +92,14 @@ void Board::removeMove(Side side, size_t holeNo) {
 	}
 }
 
-void Board::placeAStone(Side curSide, uint8_t curHole){
+inline void Board::placeAStone(Side curSide, uint8_t curHole){
 	++stonesInHole(curSide, curHole);
 	if(stonesInHole(curSide, curHole) == 1) {
 		addMove(curSide, curHole);	
 	}
 }
 
-void Board::removeAStone(Side curSide, uint8_t curHole){
+inline void Board::removeAStone(Side curSide, uint8_t curHole){
 	--stonesInHole(curSide, curHole);
 	if(stonesInHole(curSide, curHole) == 0) {
 		removeMove(curSide, curHole);	
