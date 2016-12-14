@@ -54,7 +54,7 @@ bool& MCAgent::useIterations() {
 	return useIterations_;
 }
 
-static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t depth, size_t idx, size_t baseGames);
+static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t idx, size_t baseGames);
 
 uint8_t MCAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
 	return makeMoveAndScore(b, s, movesSoFar, lastMove).first;
@@ -86,13 +86,13 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 
 	if(useIterations_) {
 		for(size_t i = 0; i < iterations_; i++) {
-			montecarlo(s, ucbs.get(), depth_ - 1, 0, baseGames_);
+			montecarlo(ucbs.get(), depth_ - 1, 0, baseGames_);
 		}
 	} else {
 		auto deadline = high_resolution_clock::now() + duration<double>(timePerMove_);
 
 		auto t1 = high_resolution_clock::now();
-		montecarlo(s, ucbs.get(), depth_ - 1, 0, baseGames_);
+		montecarlo(ucbs.get(), depth_ - 1, 0, baseGames_);
 		auto t2 = high_resolution_clock::now();
 
 		size_t itsCompleted = ucbs[0].plays / 2 / baseGames_;
@@ -103,11 +103,10 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 
 			t1 = high_resolution_clock::now();
 			for(size_t i = 0; i < itsCompleted; i++) {
-				montecarlo(s, ucbs.get(), depth_ - 1, 0, baseGames_);
+				montecarlo(ucbs.get(), depth_ - 1, 0, baseGames_);
 			}
 			t2 = high_resolution_clock::now();
 		}
-
 	}
 
 	size_t bestMove = moves[0];
@@ -132,7 +131,7 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 static thread_local Game g(new RandomAgent, new RandomAgent);
 
 // South score, north score
-static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t depth, size_t idx, size_t baseGames) {
+static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t idx, size_t baseGames) {
 	UCB& cur = ucbs[idx];
 	Side toMove = cur.whosTurn;
 	Side opp = opposite(toMove);
@@ -194,7 +193,10 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 			} else if(g.board().stonesInWell(NORTH) > 49) {
 				wins[1] += 2;
 			} else {
-				int diff = g.scoreDifference();
+				uint8_t scores[2] = { cur.board.stonesInWell(SOUTH), cur.board.stonesInWell(NORTH) };
+				scores[int(g.toMove())^1] += 98 - scores[0] - scores[1];
+
+				int diff = int(scores[0]) - scores[1];
 				if(diff > 0) wins[0] += 2;
 				if(diff < 0) wins[1] += 2;
 				if(diff == 0) {
@@ -219,11 +221,11 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 			UCB& child = ucbs[childIdx(idx, move)];
 
 			child.board = cur.board;
-			child.board.makeMove(ourSide, move);
+			bool ga = child.board.makeMove(toMove, move);
 
-			child.whosTurn = opp;
+			child.whosTurn = ga ? toMove : opp;
 
-			auto res = montecarlo(ourSide, ucbs, depth - 1 , childIdx(idx, move), baseGames);
+			auto res = montecarlo(ucbs, depth - 1, childIdx(idx, move), baseGames);
 
 			cur.plays += child.plays;
 			wins[0] += std::get<0>(res);
@@ -242,7 +244,7 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 	size_t move = moves[0];
 
 	for(size_t i = 0; i < nMoves; i++) {
-		UCB& child = ucbs[idx * 7 + moves[i]];
+		UCB& child = ucbs[childIdx(idx, moves[i])];
 		
 		double bound = child.wins[(int)toMove] / (float) child.plays;
 		bound += sqrt(logTotal / child.plays);
@@ -256,7 +258,7 @@ static std::tuple<uint32_t, uint32_t> montecarlo(Side ourSide, UCB* ucbs, size_t
 	size_t childI = childIdx(idx, move);
 	uint64_t curPlays = ucbs[childI].plays;
 
-	auto res = montecarlo(ourSide, ucbs, depth - 1, childI, baseGames);
+	auto res = montecarlo(ucbs, depth - 1, childI, baseGames);
 	
 	cur.wins[0] += std::get<0>(res);
 	cur.wins[1] += std::get<1>(res);
