@@ -63,32 +63,6 @@ void Board::recalcMoves() {
 	}
 }
 
-uint8_t Board::stonesInHole(Side side, size_t holeNo) const {
-	assert(side == SOUTH || side == NORTH);
-	assert(holeNo < 7);
-
-	return side == SOUTH ? sHoles_[holeNo] : nHoles_[holeNo];
-}
-
-uint8_t Board::stonesInWell(Side side) const {
-	assert(side == SOUTH || side == NORTH);
-	
-	return side == SOUTH ? sScore_ : nScore_;
-}
-
-uint8_t& Board::stonesInHole(Side side, size_t holeNo) {
-	assert(side == SOUTH || side == NORTH);
-	assert(holeNo < 7);
-
-	return side == SOUTH ? sHoles_[holeNo] : nHoles_[holeNo];
-}
-
-uint8_t& Board::stonesInWell(Side side) {
-	assert(side == SOUTH || side == NORTH);
-	
-	return side == SOUTH ? sScore_ : nScore_;
-}
-
 void Board::addMove(Side side, size_t holeNo) {
 	assert(side == SOUTH || side == NORTH);
 	assert(holeNo < 7);
@@ -227,11 +201,6 @@ bool __attribute__((hot)) Board::makeMove(Side side, size_t holeNo) {
 	}
 
 	return goAgain;
-}
-
-const uint8_t* Board::validMoves(Side side, size_t& nMoves) const {
-	nMoves = side == SOUTH ? noSMoves_ : noNMoves_;
-	return side == SOUTH ? sMoves_ : nMoves_;
 }
 
 std::string Board::toString() const {

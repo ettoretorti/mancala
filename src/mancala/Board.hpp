@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cassert>
 #include <string>
 #include <functional>
 
@@ -18,15 +19,15 @@ public:
 	void reset();
 	void recalcMoves();
 
-	uint8_t stonesInHole(Side side, size_t holeNo) const;
-	uint8_t stonesInWell(Side side) const;
+	inline uint8_t stonesInHole(Side side, size_t holeNo) const;
+	inline uint8_t stonesInWell(Side side) const;
 	
-	uint8_t& stonesInHole(Side side, size_t holeNo);
-	uint8_t& stonesInWell(Side side);
+	inline uint8_t& stonesInHole(Side side, size_t holeNo);
+	inline uint8_t& stonesInWell(Side side);
 
 	bool makeMove(Side side, size_t holeNo);
 
-	const uint8_t* validMoves(Side side, size_t& nMoves) const;
+	inline const uint8_t* validMoves(Side side, size_t& nMoves) const;
 
 	std::string toString() const;
 
@@ -49,6 +50,37 @@ private:
 };
 
 bool operator==(const Board& b1, const Board& b2);
+
+inline uint8_t Board::stonesInHole(Side side, size_t holeNo) const {
+	assert(side == SOUTH || side == NORTH);
+	assert(holeNo < 7);
+
+	return side == SOUTH ? sHoles_[holeNo] : nHoles_[holeNo];
+}
+
+inline uint8_t Board::stonesInWell(Side side) const {
+	assert(side == SOUTH || side == NORTH);
+
+	return side == SOUTH ? sScore_ : nScore_;
+}
+
+inline uint8_t& Board::stonesInHole(Side side, size_t holeNo) {
+	assert(side == SOUTH || side == NORTH);
+	assert(holeNo < 7);
+
+	return side == SOUTH ? sHoles_[holeNo] : nHoles_[holeNo];
+}
+
+inline uint8_t& Board::stonesInWell(Side side) {
+	assert(side == SOUTH || side == NORTH);
+
+	return side == SOUTH ? sScore_ : nScore_;
+}
+
+inline const uint8_t* Board::validMoves(Side side, size_t& nMoves) const {
+	nMoves = side == SOUTH ? noSMoves_ : noNMoves_;
+	return side == SOUTH ? sMoves_ : nMoves_;
+}
 
 namespace std {
 
