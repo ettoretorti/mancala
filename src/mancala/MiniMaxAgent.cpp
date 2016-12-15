@@ -15,7 +15,7 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Board&
 
 static bool pairCompare(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem);
 static bool pairCompare_minimize(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem);
-static uint8_t iteritive_deepening(Side toMove, const Board& b, size_t movesSoFar);
+static uint8_t iterative_deepening(Side toMove, const Board& b, size_t movesSoFar);
 uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
 	// Swap Logic
 	if(movesSoFar == 0) return 0;
@@ -30,7 +30,7 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_
 		return moves[rand() % nMoves];
 
 	Board bCopy = b;
-	return iteritive_deepening(s, bCopy, movesSoFar);
+	return iterative_deepening(s, bCopy, movesSoFar);
 }
 
 static bool pairCompare(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
@@ -46,7 +46,7 @@ static bool pairCompare_minimize(const std::pair<uint8_t, double>& firstElem, co
   return firstElem.second < secondElem.second;
 }
 
-static uint8_t iteritive_deepening(Side toMove, const Board& b, size_t movesSoFar){
+static uint8_t iterative_deepening(Side toMove, const Board& b, size_t movesSoFar){
 	uint8_t MAX_DEPTH = 4;
 	std::pair<uint8_t,double> final_result = std::make_pair(8, toMove == SOUTH? -1.0/0.0 : 1.0/0.0);
 
