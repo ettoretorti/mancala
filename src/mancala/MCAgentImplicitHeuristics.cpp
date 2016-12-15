@@ -50,14 +50,11 @@ static uint16_t defendSeeds(const Board& b, Side s){
 		if(b.stonesInHole(opponent, i) == 0 && b.stonesInHole(s, i) != 0){
 			for(uint8_t j = 0; j < 7; j++){
 				uint8_t distance = i-j;
-				uint8_t amountStolen = 0;
-				if(distance > 0){
-					amountStolen = b.stonesInHole(opponent, j) == distance? b.stonesInHole(s, 6-i) : 0;
-				} else if(distance < 0){
-					amountStolen = b.stonesInHole(opponent, j) == 15 + distance? b.stonesInHole(s, 6-i) : 0;
+				if((distance > 0 && b.stonesInHole(opponent, j) == distance) 
+						|| (distance < 0 && b.stonesInHole(opponent, j) == 15 + distance)){
+					stealableByMoves += b.stonesInHole(s, 6-i);
+					break;
 				}
-				if(amountStolen > stealableByMoves)
-					stealableByMoves = amountStolen;
 			}
 		}
 	}
