@@ -27,7 +27,7 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_
 		return moves[rand() % nMoves];
 
 	Side toMove = s;
-	uint8_t depth = 11;
+	uint8_t depth = 16;
 	Board bCopy = b;
 
 	return minimax_alphabeta(depth, toMove, bCopy, movesSoFar, -1.0/0.0, 1.0/0.0).first;
