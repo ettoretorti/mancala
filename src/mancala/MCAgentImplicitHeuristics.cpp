@@ -20,12 +20,63 @@ struct UCB {
 	double heuristic = 0.0;
 };
 
+static uint8_t weight_1 = 3;
+static uint8_t weight_2 = 5;
+static uint8_t weight_3 = 20;
+
 static size_t ipow(size_t base, size_t exp, size_t res = 1) {
 	return exp == 0 ? res : ipow(base, exp-1, res * base);
 }
 
 static inline Side opposite(Side s) {
 	return (Side)(((int)s) ^ 1);
+}
+
+static uint16_t defendSeeds(const Board& b, Side s){
+	Side opponent = opposite(s);
+	uint8_t stealableBy15 = 0;
+	uint8_t stealableByMoves = 0;
+
+	// stealable by doing one whole loop (i.e 15 stones)
+	for(uint8_t i = 0; i < 7; i++){
+		if(b.stonesInHole(opponent, i) == 15){
+			stealableBy15 += b.stonesInHole(s, 6 - i) +1;
+			break;
+		}
+	}
+
+	// stealable by moving to existing empty hole
+	for(uint8_t i = 0; i < 7; i++){
+		if(b.stonesInHole(opponent, i) == 0 && b.stonesInHole(s, i) != 0){
+			for(uint8_t j = 0; j < 7; j++){
+				uint8_t distance = i-j;
+				uint8_t amountStolen = 0;
+				if(distance > 0){
+					amountStolen = b.stonesInHole(opponent, j) == distance? b.stonesInHole(s, 6-i) : 0;
+				} else if(distance < 0){
+					amountStolen = b.stonesInHole(opponent, j) == 15 + distance? b.stonesInHole(s, 6-i) : 0;
+				}
+				if(amountStolen > stealableByMoves)
+					stealableByMoves = amountStolen;
+			}
+		}
+	}
+
+	return stealableBy15 > stealableByMoves? stealableBy15 : stealableByMoves;
+}
+
+static uint16_t clusterTowardWell(const Board& b, Side s){
+	uint16_t heuristic = 0;
+	for(uint8_t i = 0; i < 7; i++)
+		heuristic += b.stonesInHole(s, i) * i;
+	return heuristic;
+}
+
+static double heuristic(const Board& b, Side s){
+	Side opponent = opposite(s);
+
+	double wellDiff = (double)b.stonesInWell(s) - b.stonesInWell(opponent);
+	return wellDiff * weight_1 - defendSeeds(b, s)/weight_2 + clusterTowardWell(b, s) / weight_3;
 }
 
 static inline double sigmoid(double val) {
@@ -213,7 +264,7 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t
 		cur.plays += 2 * baseGames;
 		cur.wins[0] += wins[0];
 		cur.wins[1] += wins[1];
-		cur.heuristic = sigmoid((double)cur.board.stonesInWell(SOUTH) - (double)cur.board.stonesInWell(NORTH)) * 0.5 + 0.5;
+		cur.heuristic = sigmoid(heuristic(cur.board, SOUTH)) * 0.5 + 0.5;
 		return std::make_tuple(wins[0], wins[1]);
 	}
 
@@ -237,7 +288,7 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t depth, size_t
 		}
 		cur.wins[0] += wins[0];
 		cur.wins[1] += wins[1];
-		cur.heuristic = sigmoid((double)cur.board.stonesInWell(SOUTH) - (double)cur.board.stonesInWell(NORTH)) * 0.5 + 0.5;
+		cur.heuristic = sigmoid(heuristic(cur.board, SOUTH)) * 0.5 + 0.5;
 		return std::make_tuple(wins[0], wins[1]);
 	}
 	
