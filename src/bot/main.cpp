@@ -2,6 +2,7 @@
 #include <mancala/output.hpp>
 #include <mancala/Board.hpp>
 #include <mancala/RandomAgent.hpp>
+#include <mancala/MCAgent.hpp>
 
 #include <memory>
 #include <iostream>
@@ -10,7 +11,9 @@ int main() {
 	using namespace std;
 	using namespace input;
 
-	auto agent = std::unique_ptr<Agent>(new RandomAgent());
+	auto agent = std::unique_ptr<MCAgent>(new MCAgent());
+	//agent->useIterations() = false;
+	//agent->timePerMove() = 2.0;
 
 	auto msg = parseNext(cin);
 
@@ -23,7 +26,7 @@ int main() {
 
 	Side curSide = SOUTH;
 	Side ourSide = startMsg->side;
-	Side oppSide = (Side)((int)curSide^1);
+	Side oppSide = (Side)((int)ourSide^1);
 	size_t movesPlayed = 0;
 	uint8_t lastMove = 0;
 	Board b;
@@ -33,6 +36,15 @@ int main() {
 		if(curSide == ourSide) {
 			uint8_t move = agent->makeMove(b, ourSide, movesPlayed, lastMove);
 			cout << output::move(move);
+			cout.flush();
+
+			if(move >= 7) {
+				assert(movesPlayed == 1);
+
+				std::swap(ourSide, oppSide);
+				movesPlayed++;
+				continue;
+			}
 		}
 
 		msg = parseNext(cin);
@@ -48,7 +60,7 @@ int main() {
 		lastMove = chng->lastMove;
 
 		if(lastMove >= 7) {
-			std::swap(curSide, oppSide);
+			std::swap(ourSide, oppSide);
 		} else {
 			b.makeMove(curSide, lastMove);
 		}
@@ -58,6 +70,6 @@ int main() {
 			return - 1;
 		}
 
-		curSide == chng->ourTurn ? ourSide : oppSide;
+		curSide = chng->ourTurn ? ourSide : oppSide;
 	}
 }
