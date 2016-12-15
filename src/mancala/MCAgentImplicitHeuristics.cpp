@@ -32,6 +32,11 @@ static inline Side opposite(Side s) {
 	return (Side)(((int)s) ^ 1);
 }
 
+/*
+	I changed this to return the total cost of defending
+	your seeds. It could alternatively return the most 
+	vurnable set of seeds
+*/
 static uint16_t defendSeeds(const Board& b, Side s){
 	Side opponent = opposite(s);
 	uint8_t stealableBy15 = 0;
@@ -61,7 +66,7 @@ static uint16_t defendSeeds(const Board& b, Side s){
 		}
 	}
 
-	return stealableBy15 + stealableByMoves;
+	return stealableBy15 > stealableByMoves? stealableBy15 : stealableByMoves;
 }
 
 static uint16_t clusterTowardWell(const Board& b, Side s){
