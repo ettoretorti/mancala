@@ -41,25 +41,27 @@ static uint16_t defendSeeds(const Board& b, Side s){
 	for(uint8_t i = 0; i < 7; i++){
 		if(b.stonesInHole(opponent, i) == 15){
 			stealableBy15 += b.stonesInHole(s, 6 - i) +1;
-			break;
 		}
 	}
 
 	// stealable by moving to existing empty hole
 	for(uint8_t i = 0; i < 7; i++){
-		if(b.stonesInHole(opponent, i) == 0 && b.stonesInHole(s, i) != 0){
+		if(b.stonesInHole(opponent, i) == 0 && b.stonesInHole(s, 6-i) != 0){
 			for(uint8_t j = 0; j < 7; j++){
 				uint8_t distance = i-j;
-				if((distance > 0 && b.stonesInHole(opponent, j) == distance) 
-						|| (distance < 0 && b.stonesInHole(opponent, j) == 15 + distance)){
-					stealableByMoves += b.stonesInHole(s, 6-i);
+				if(distance > 0 
+						&& (b.stonesInHole(opponent, j) == distance || b.stonesInHole(opponent, j) == distance + 15)){
+					stealableByMoves += b.stonesInHole(s, 6-j);
+					break;
+				} else if(distance < 0 && b.stonesInHole(opponent, j) == 15 + distance){
+					stealableByMoves += b.stonesInHole(s, 6-j);
 					break;
 				}
 			}
 		}
 	}
 
-	return stealableBy15 > stealableByMoves? stealableBy15 : stealableByMoves;
+	return stealableBy15 + stealableByMoves;
 }
 
 static uint16_t clusterTowardWell(const Board& b, Side s){
