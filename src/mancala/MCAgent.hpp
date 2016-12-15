@@ -7,7 +7,7 @@
 class MCAgent : public Agent {
 public:
 	MCAgent(uint16_t ucbDepth, uint16_t ucbBaseGames, uint32_t iterations);
-	MCAgent() : MCAgent(7, 3, 7500) {}
+	MCAgent() : MCAgent(7, 3, 100000) {}
 
 	std::pair<uint8_t, float> makeMoveAndScore(const Board& board, Side side, size_t movesSoFar, uint8_t lastMove);
 	uint8_t makeMove(const Board& board, Side side, size_t movesSoFar, uint8_t lastMove) override;
