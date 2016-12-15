@@ -27,7 +27,7 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_
 		return moves[rand() % nMoves];
 
 	Side toMove = s;
-	uint8_t depth = 16;
+	uint8_t depth = 7;
 	Board bCopy = b;
 
 	auto res = minimax_alphabeta(depth, toMove, bCopy, movesSoFar, -1.0/0.0, 1.0/0.0);
@@ -62,6 +62,63 @@ static inline double heuristic(const Board& b) {
 	return double(b.stonesInWell(SOUTH)) - b.stonesInWell(NORTH);
 }
 
+static inline bool isSeedable(const Board& b, Side s, uint8_t idx) {
+	bool toRet = false;
+	int8_t cur = idx - 1;
+
+	do {
+		if(cur < 0) break;
+		if(idx - cur == b.stonesInHole(s, cur)) {
+			toRet = true;
+			break;
+		}
+		cur--;
+	} while(true);
+
+	return toRet;
+}
+
+static inline double jimmy_heuristic(const Board& b, Side s) {
+	Side o = Side(int(s)^1);
+	double d = 0.0;
+
+	double ourWell = b.stonesInWell(s);
+	double oppWell = b.stonesInWell(o);
+	if((ourWell != 0.0 || oppWell != 0.0) && ourWell != oppWell) {
+		double bigWell;
+		double smallWell;
+		if(ourWell > oppWell) {
+			bigWell = ourWell;
+			smallWell = oppWell;
+		} else {
+			bigWell = oppWell;
+			smallWell = ourWell;
+		}
+		d = ((1.0 / bigWell) * (bigWell - smallWell) + 1.0) * bigWell;
+		if(oppWell > ourWell) d *= -1;
+	}
+
+	size_t N;
+	const auto* moves = b.validMoves(s, N);
+
+	int ourSum = 0;
+	for(size_t i = 0; i < N; i++) {
+		ourSum += b.stonesInHole(s, moves[i]);
+	}
+
+	int oppSum = 98 - ourWell - oppWell - ourSum;
+
+	d += (ourSum - oppSum) / 2.0;
+
+	for(uint8_t i = 0; i < 7; i++) {
+		if(b.stonesInHole(o, i) == 0 && isSeedable(b, o, i)) {
+			d -= b.stonesInHole(s, 6-i);
+		}
+	}
+
+	return d;
+}
+
 static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toMove, Board& b, size_t movesSoFar, double alpha, double beta){
 	size_t nMoves;
 	auto* moves = b.validMoves(toMove, nMoves);
@@ -87,7 +144,9 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toM
 
 	// We Have Reached the Maximum Depth
 	if(depth == 0){
-		double val = heuristic(b);
+		double val = jimmy_heuristic(b, toMove);
+		if(toMove != SOUTH) val *= -1;
+
 		return std::make_pair(-1, val);
 	}
 
@@ -102,8 +161,10 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toM
 			// Check All Moves
 			for(uint8_t i = 0; i < nMoves; i++){
 				Board nCopy = b;
-				nCopy.makeMove(toMove, possibleMoves[i].first);
-				possibleMoves[i].second = heuristic(nCopy);
+				bool ga = nCopy.makeMove(toMove, possibleMoves[i].first);
+
+				possibleMoves[i].second = jimmy_heuristic(nCopy, ga ? SOUTH : NORTH);
+				if(!ga) possibleMoves[i].second *= -1;
 			}
 
 			// Sort based on best payoff
@@ -139,8 +200,9 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toM
 			// Check All Moves
 			for(uint8_t i = 0; i < nMoves; i++){
 				Board nCopy = b;
-				nCopy.makeMove(toMove, possibleMoves[i].first);
-				possibleMoves[i].second = heuristic(nCopy);
+				bool ga = nCopy.makeMove(toMove, possibleMoves[i].first);
+				possibleMoves[i].second = jimmy_heuristic(nCopy, ga ? NORTH : SOUTH);
+				if(ga) possibleMoves[i].second *= -1;
 			}
 
 			// Sort based on best payoff
