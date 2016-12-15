@@ -9,7 +9,8 @@
 #include <algorithm>
 #include <unordered_map>
 
-static std::unordered_map<Board, double> cache = {};
+static std::unordered_map<Board, double> cache_north = {};
+static std::unordered_map<Board, double> cache_south = {};
 
 static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Board& b, size_t movesSoFar, double alpha, double beta);
 
@@ -37,9 +38,12 @@ static bool pairCompare(const std::pair<uint8_t, double>& firstElem, const std::
   return firstElem.second > secondElem.second;
 }
 
-static void cacheIt(const Board& b, double val){
+static void cacheIt(const Board& b, double val, Side s){
 	Board bCopy = b;		                             
-	cache.insert(std::make_pair(bCopy, val));
+	if(s == SOUTH)
+		cache_south.insert(std::make_pair(bCopy, val));
+	if(s == NORTH)
+		cache_north.insert(std::make_pair(bCopy, val));
 }
 
 static bool pairCompare_minimize(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
@@ -47,7 +51,7 @@ static bool pairCompare_minimize(const std::pair<uint8_t, double>& firstElem, co
 }
 
 static uint8_t iterative_deepening(Side toMove, const Board& b, size_t movesSoFar){
-	uint8_t MAX_DEPTH = 4;
+	uint8_t MAX_DEPTH = 7;
 	std::pair<uint8_t,double> final_result = std::make_pair(8, toMove == SOUTH? -1.0/0.0 : 1.0/0.0);
 
 	for(uint8_t depth = 1; depth < MAX_DEPTH; depth++){
@@ -133,25 +137,25 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toM
 		double val = scoreDiff > 0 ?  1.0/0.0 :
 		             scoreDiff < 0 ? -1.0/0.0 :
 		                             0.0;
-		cacheIt(b, val);
+		cacheIt(b, val, scoreDiff > 0? SOUTH : NORTH);
 		return std::make_pair(0, val);
 	}
 
 	// Someone Can Reach A Certain Win
 	if(b.stonesInWell(SOUTH) > 49){
-		cacheIt(b, 1.0/0.0);
+		cacheIt(b, 1.0/0.0, SOUTH);
 		return std::make_pair(moves[0], 1.0/0.0);
 	}
 	else if(b.stonesInWell(NORTH) > 49){
-		cacheIt(b, -1.0/0.0);
+		cacheIt(b, -1.0/0.0, NORTH);
 		return std::make_pair(moves[0], -1.0/0.0);
 	}
 
 	// We Have Reached the Maximum Depth
 	if(depth == 0){
-		double val = heuristic(b);
+		double val = jimmy_heuristic(b, toMove);
 		if(toMove != SOUTH) val *= -1;
-		cacheIt(b, val);
+		cacheIt(b, val, toMove);
 		return std::make_pair(-1, val);
 	}
 
@@ -165,8 +169,8 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toM
 		if(depth > 3){
 			// Check All Moves
 			for(uint8_t i = 0; i < nMoves; i++){
-				if(cache.find(b) != cache.end()){
-					possibleMoves[i].second = cache[b];
+				if(cache_south.find(b) != cache_south.end()){
+					possibleMoves[i].second = cache_south[b];
 				} else{
 					Board nCopy = b;
 					bool ga = nCopy.makeMove(toMove, possibleMoves[i].first);
@@ -196,7 +200,7 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toM
 			}
 
 		}
-		cacheIt(b, result.second);
+		cacheIt(b, result.second, SOUTH);
 		return result;
 	} 
 	// MINIMIZE
@@ -208,13 +212,13 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toM
 		if(depth > 3){
 			// Check All Moves
 			for(uint8_t i = 0; i < nMoves; i++){
-				if(cache.find(b) != cache.end()){
-					possibleMoves[i].second = cache[b];
+				if(cache_north.find(b) != cache_north.end()){
+					possibleMoves[i].second = cache_north[b];
 				} else{
 					Board nCopy = b;
 					bool ga = nCopy.makeMove(toMove, possibleMoves[i].first);
 					possibleMoves[i].second = jimmy_heuristic(nCopy, ga ? NORTH : SOUTH);
-					if(!ga) possibleMoves[i].second *= -1;
+					if(ga) possibleMoves[i].second *= -1;
 				}
 			}
 
@@ -239,7 +243,7 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toM
 			}
 
 		}
-		cacheIt(b, result.second);
+		cacheIt(b, result.second, NORTH);
 		return result;
 	}
 }
