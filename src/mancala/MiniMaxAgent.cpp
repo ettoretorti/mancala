@@ -7,6 +7,9 @@
 #include <cassert>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
+
+static std::unordered_map<Board, double> cache = {};
 
 static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Board& b, size_t movesSoFar, double alpha, double beta);
 
@@ -26,16 +29,17 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_
 	if(b.stonesInWell(s) > 49)
 		return moves[rand() % nMoves];
 
-	Side toMove = s;
-	uint8_t depth = 7;
 	Board bCopy = b;
-
-	auto res = minimax_alphabeta(depth, toMove, bCopy, movesSoFar, -1.0/0.0, 1.0/0.0);
-	return res.first;
+	return iteritive_deepening(s, bCopy, movesSoFar);
 }
 
 static bool pairCompare(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
   return firstElem.second > secondElem.second;
+}
+
+static void cacheIt(const Board& b, double val){
+	Board bCopy = b;		                             
+	cache.insert(std::make_pair(bCopy, val));
 }
 
 static bool pairCompare_minimize(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
@@ -43,16 +47,12 @@ static bool pairCompare_minimize(const std::pair<uint8_t, double>& firstElem, co
 }
 
 static uint8_t iteritive_deepening(Side toMove, const Board& b, size_t movesSoFar){
-	uint8_t MAX_DEPTH = 10;
-	std::pair<uint8_t,double> final_result = std::make_pair(8, -1.0/0.0);
+	uint8_t MAX_DEPTH = 4;
+	std::pair<uint8_t,double> final_result = std::make_pair(8, toMove == SOUTH? -1.0/0.0 : 1.0/0.0);
 
 	for(uint8_t depth = 1; depth < MAX_DEPTH; depth++){
 		Board bCopy = b;
-		std::pair<uint8_t,double> result = minimax_alphabeta(depth, toMove, bCopy, movesSoFar, -1.0/0.0, 1.0/0.0);
-		if(toMove == SOUTH && result.second > final_result.second)
-			final_result = result;
-		else if(toMove == NORTH && result.second < final_result.second)
-			final_result = result;
+		final_result = minimax_alphabeta(depth, toMove, bCopy, movesSoFar, -1.0/0.0, 1.0/0.0);
 	}
 	return final_result.first;
 }
@@ -133,20 +133,25 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toM
 		double val = scoreDiff > 0 ?  1.0/0.0 :
 		             scoreDiff < 0 ? -1.0/0.0 :
 		                             0.0;
+		cacheIt(b, val);
 		return std::make_pair(0, val);
 	}
 
 	// Someone Can Reach A Certain Win
-	if(b.stonesInWell(SOUTH) > 49)
+	if(b.stonesInWell(SOUTH) > 49){
+		cacheIt(b, 1.0/0.0);
 		return std::make_pair(moves[0], 1.0/0.0);
-	else if(b.stonesInWell(NORTH) > 49)
+	}
+	else if(b.stonesInWell(NORTH) > 49){
+		cacheIt(b, -1.0/0.0);
 		return std::make_pair(moves[0], -1.0/0.0);
+	}
 
 	// We Have Reached the Maximum Depth
 	if(depth == 0){
-		double val = jimmy_heuristic(b, toMove);
+		double val = heuristic(b);
 		if(toMove != SOUTH) val *= -1;
-
+		cacheIt(b, val);
 		return std::make_pair(-1, val);
 	}
 
@@ -160,11 +165,14 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toM
 		if(depth > 3){
 			// Check All Moves
 			for(uint8_t i = 0; i < nMoves; i++){
-				Board nCopy = b;
-				bool ga = nCopy.makeMove(toMove, possibleMoves[i].first);
-
-				possibleMoves[i].second = jimmy_heuristic(nCopy, ga ? SOUTH : NORTH);
-				if(!ga) possibleMoves[i].second *= -1;
+				if(cache.find(b) != cache.end()){
+					possibleMoves[i].second = cache[b];
+				} else{
+					Board nCopy = b;
+					bool ga = nCopy.makeMove(toMove, possibleMoves[i].first);
+					possibleMoves[i].second = jimmy_heuristic(nCopy, ga ? SOUTH : NORTH);
+					if(!ga) possibleMoves[i].second *= -1;
+				}
 			}
 
 			// Sort based on best payoff
@@ -188,6 +196,7 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toM
 			}
 
 		}
+		cacheIt(b, result.second);
 		return result;
 	} 
 	// MINIMIZE
@@ -199,10 +208,14 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toM
 		if(depth > 3){
 			// Check All Moves
 			for(uint8_t i = 0; i < nMoves; i++){
-				Board nCopy = b;
-				bool ga = nCopy.makeMove(toMove, possibleMoves[i].first);
-				possibleMoves[i].second = jimmy_heuristic(nCopy, ga ? NORTH : SOUTH);
-				if(ga) possibleMoves[i].second *= -1;
+				if(cache.find(b) != cache.end()){
+					possibleMoves[i].second = cache[b];
+				} else{
+					Board nCopy = b;
+					bool ga = nCopy.makeMove(toMove, possibleMoves[i].first);
+					possibleMoves[i].second = jimmy_heuristic(nCopy, ga ? NORTH : SOUTH);
+					if(!ga) possibleMoves[i].second *= -1;
+				}
 			}
 
 			// Sort based on best payoff
@@ -226,6 +239,7 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toM
 			}
 
 		}
+		cacheIt(b, result.second);
 		return result;
 	}
 }
