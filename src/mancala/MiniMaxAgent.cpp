@@ -30,15 +30,16 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_
 	uint8_t depth = 16;
 	Board bCopy = b;
 
-	return minimax_alphabeta(depth, toMove, bCopy, movesSoFar, -1.0/0.0, 1.0/0.0).first;
+	auto res = minimax_alphabeta(depth, toMove, bCopy, movesSoFar, -1.0/0.0, 1.0/0.0);
+	return res.first;
 }
 
 static bool pairCompare(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
-  return firstElem.first > secondElem.first;
+  return firstElem.second > secondElem.second;
 }
 
 static bool pairCompare_minimize(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
-  return firstElem.first < secondElem.first;
+  return firstElem.second < secondElem.second;
 }
 
 static uint8_t iteritive_deepening(Side toMove, const Board& b, size_t movesSoFar){
@@ -56,7 +57,12 @@ static uint8_t iteritive_deepening(Side toMove, const Board& b, size_t movesSoFa
 	return final_result.first;
 }
 
-static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side toMove, Board& b, size_t movesSoFar, double alpha, double beta){
+/// Returns the heuristic value for south. 0 indicates a draw, positive values an advantage for south, and negative values and advantage for north.
+static inline double heuristic(const Board& b) {
+	return double(b.stonesInWell(SOUTH)) - b.stonesInWell(NORTH);
+}
+
+static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toMove, Board& b, size_t movesSoFar, double alpha, double beta){
 	size_t nMoves;
 	auto* moves = b.validMoves(toMove, nMoves);
 
@@ -81,8 +87,8 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side toMove, B
 
 	// We Have Reached the Maximum Depth
 	if(depth == 0){
-		double val = (double)b.stonesInWell(SOUTH) - (double)b.stonesInWell(NORTH);
-		return std::make_pair(0, val);
+		double val = heuristic(b);
+		return std::make_pair(-1, val);
 	}
 
 	// MAXIMIZE
@@ -97,7 +103,7 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side toMove, B
 			for(uint8_t i = 0; i < nMoves; i++){
 				Board nCopy = b;
 				nCopy.makeMove(toMove, possibleMoves[i].first);
-				possibleMoves[i].second = (double)nCopy.stonesInWell(SOUTH) - (double)nCopy.stonesInWell(NORTH);
+				possibleMoves[i].second = heuristic(nCopy);
 			}
 
 			// Sort based on best payoff
@@ -109,13 +115,12 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side toMove, B
 			Board nCopy = b;
 			uint8_t move = possibleMoves[i].first;
 			bool goAgain = nCopy.makeMove(toMove, move);
-			if(!goAgain) toMove = NORTH;
 
-			std::pair<uint8_t,double> nResult = minimax_alphabeta(depth-1, toMove, nCopy, movesSoFar+1, alpha, beta);
+			std::pair<uint8_t,double> nResult = minimax_alphabeta(depth-1, goAgain ? SOUTH : NORTH, nCopy, movesSoFar+1, alpha, beta);
 			if(nResult.second >= result.second){
 				result = nResult;
 				result.first = move;
-				alpha = result.second;
+				alpha = std::max(alpha, result.second);
 				if(beta <= alpha){
 					break;
 				}
@@ -135,7 +140,7 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side toMove, B
 			for(uint8_t i = 0; i < nMoves; i++){
 				Board nCopy = b;
 				nCopy.makeMove(toMove, possibleMoves[i].first);
-				possibleMoves[i].second = (double)nCopy.stonesInWell(SOUTH) - (double)nCopy.stonesInWell(NORTH);
+				possibleMoves[i].second = heuristic(nCopy);
 			}
 
 			// Sort based on best payoff
@@ -147,13 +152,12 @@ static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side toMove, B
 			Board nCopy = b;
 			uint8_t move = possibleMoves[i].first;
 			bool goAgain = nCopy.makeMove(toMove, move);
-			if(!goAgain) toMove = SOUTH;
 
-			std::pair<uint8_t,double> nResult = minimax_alphabeta(depth-1, toMove, nCopy, movesSoFar+1, alpha, beta);
+			std::pair<uint8_t,double> nResult = minimax_alphabeta(depth-1, goAgain ? NORTH : SOUTH, nCopy, movesSoFar+1, alpha, beta);
 			if(nResult.second <= result.second){
 				result = nResult;
 				result.first = move;
-				alpha = result.second;
+				beta = std::min(beta, result.second);
 				if(beta <= alpha){
 					break;
 				}
