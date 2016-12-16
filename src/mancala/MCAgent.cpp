@@ -14,10 +14,10 @@
 
 struct UCB {
 	Board board;
-	uint64_t plays = 0;
-	uint64_t wins[2] = { 0 };
+	uint32_t plays = 0;
+	uint32_t wins[2] = { 0 };
+	uint32_t childIdxs[7] = { 0 };
 	Side whosTurn;
-	uint32_t childIdxs[7];
 };
 
 static inline size_t childIdx(size_t idx, size_t move) {
@@ -241,80 +241,68 @@ static std::tuple<uint32_t, uint32_t> montecarlo(UCB* ucbs, size_t idx, size_t b
 		return std::make_tuple((uint32_t)baseGames, (uint32_t)baseGames);
 	}
 
-	// Expansion
-	if(cur.plays == 0) {
-		bool ok = true;
+	// Selection + backpropagation
+	if(cur.plays > 0 && cur.childIdxs[0] != ~0u) {
+		size_t total = 0;
+		size_t childI = 8;
+		bool abandonShip = false;
+
 		for(size_t i = 0; i < nMoves; i++) {
-			cur.childIdxs[i] = alloc();
-			if(cur.childIdxs[i] == ~0u) {
-				ok = false;
+			if(cur.childIdxs[i] == 0) {
+				cur.childIdxs[i] = alloc();
+				if(cur.childIdxs[i] == ~0u) {
+					abandonShip = true;
+					cur.childIdxs[0] = ~0u;
+				} else {
+					childI = cur.childIdxs[i];
+					UCB& child = ucbs[cur.childIdxs[i]];
+
+					child.board = cur.board;
+					bool ga = child.board.makeMove(cur.whosTurn, moves[i]);
+
+					child.whosTurn = ga ? toMove : opp;
+				}
 				break;
 			}
-		}
-
-		if(!ok) {
-			for(size_t i = 0; i < nMoves; i++) {
-				cur.childIdxs[i] = ~0u;
-			}
-		} else {
-			for(size_t i = 0; i < nMoves; i++) {
-				UCB& child = ucbs[cur.childIdxs[i]];
-
-				child.board = cur.board;
-				bool ga = child.board.makeMove(cur.whosTurn, moves[i]);
-
-				child.whosTurn = ga ? toMove : opp;
-			}
-		}
-
-		leaves++;
-		auto res = randomPlayouts(cur.board, toMove, baseGames);
-		cur.plays = 2 * baseGames;
-		cur.wins[0] = std::get<0>(res);
-		cur.wins[1] = std::get<1>(res);
-
-		return res;
-	}
-
-	// Selection + backpropagation
-	if(cur.childIdxs[0] != ~0u) {
-		size_t total = 0;
-		for(size_t i = 0; i < nMoves; i++) {
 			total += ucbs[cur.childIdxs[i]].plays;
 		}
 
 
-		double logTotal = 3.0 * log(cur.plays);
-		double max = -std::numeric_limits<double>::infinity();
-		size_t moveIdx = 0;
+		if(!abandonShip) {
+			if(childI > 6) {
+				double logTotal = 3.0 * log(cur.plays);
+				double max = -std::numeric_limits<double>::infinity();
+				size_t moveIdx = 0;
 
-		for(size_t i = 0; i < nMoves; i++) {
-			UCB& child = ucbs[cur.childIdxs[i]];
+				for(size_t i = 0; i < nMoves; i++) {
+					UCB& child = ucbs[cur.childIdxs[i]];
 
-			if(child.plays == 0) {
-				moveIdx = i;
-				break;
+					if(child.plays == 0) {
+						moveIdx = i;
+						break;
+					}
+
+					double bound = child.wins[(int)toMove] / (float) child.plays;
+					bound += sqrt(logTotal / child.plays);
+
+					if(bound > max) {
+						max = bound;
+						moveIdx = i;
+					}
+				}
+
+				childI = cur.childIdxs[moveIdx];
 			}
 
-			double bound = child.wins[(int)toMove] / (float) child.plays;
-			bound += sqrt(logTotal / child.plays);
+			uint32_t curPlays = ucbs[childI].plays;
+			auto res = montecarlo(ucbs, childI, baseGames, alloc);
 
-			if(bound > max) {
-				max = bound;
-				moveIdx = i;
-			}
+			cur.plays += ucbs[childI].plays - curPlays;
+			cur.wins[0] += std::get<0>(res);
+			cur.wins[1] += std::get<1>(res);
+
+			return res;
 		}
-
-		size_t childI = cur.childIdxs[moveIdx];
-		uint64_t curPlays = ucbs[childI].plays;
-
-		auto res = montecarlo(ucbs, childI, baseGames, alloc);
-
-		cur.wins[0] += std::get<0>(res);
-		cur.wins[1] += std::get<1>(res);
-		cur.plays += ucbs[childI].plays - curPlays;
-
-		return res;
 	}
 
 	// Random playouts
