@@ -27,7 +27,7 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_
 	assert(nMoves > 0);
 
 	// The game is already over
-	if(b.stonesInWell(s) > 49)
+	if(b.stonesInWell(s) > 49 || b.stonesInWell(Side(int(s)^1)) > 49)
 		return moves[rand() % nMoves];
 
 	Board bCopy = b;
