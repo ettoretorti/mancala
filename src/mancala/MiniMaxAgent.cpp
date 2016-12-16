@@ -7,6 +7,7 @@
 #include <cassert>
 #include <vector>
 #include <algorithm>
+#include <chrono>
 #include <unordered_map>
 
 static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Board& b, size_t movesSoFar, double alpha, double beta,
@@ -50,13 +51,21 @@ std::pair<uint8_t,double> MiniMaxAgent::iterative_deepening(Side toMove, const B
 	std::unordered_map<Board, double> cache_north = {};
 	std::unordered_map<Board, double> cache_south = {};
 
-	uint8_t MAX_DEPTH = 7;
+	uint8_t CURRENT_DEPTH = 6;
 	std::pair<uint8_t,double> final_result = std::make_pair(8, toMove == SOUTH? -1.0/0.0 : 1.0/0.0);
 
-	for(uint8_t depth = 1; depth < MAX_DEPTH; depth++){
+	double timeForMinimax = 10.0;
+
+	auto current = std::chrono::high_resolution_clock::now();
+	auto deadline = current + std::chrono::duration<double>(timeForMinimax);
+	
+	while(current < deadline){
 		Board bCopy = b;
-		final_result = minimax_alphabeta(depth, toMove, bCopy, movesSoFar, -1.0/0.0, 1.0/0.0, cache_north, cache_south);
+		final_result = minimax_alphabeta(CURRENT_DEPTH, toMove, bCopy, movesSoFar, -1.0/0.0, 1.0/0.0, cache_north, cache_south);
+		CURRENT_DEPTH++;
+		current = std::chrono::high_resolution_clock::now();
 	}
+	std::cout << (int) CURRENT_DEPTH << std::endl;
 	return final_result;
 }
 

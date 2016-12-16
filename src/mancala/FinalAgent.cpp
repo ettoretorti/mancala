@@ -37,7 +37,7 @@ static size_t neededSize(int depth) {
 	return initial + 1;
 }
 
-size_t ipow(size_t base, size_t exp, size_t res = 1) {
+static size_t ipow(size_t base, size_t exp, size_t res = 1) {
 	return exp == 0 ? res : ipow(base, exp-1, res * base);
 }
 
@@ -117,31 +117,26 @@ std::pair<uint8_t, float> FinalAgent::makeMoveAndScore(const Board& b, Side s, s
 	std::function<uint32_t()> alloc = lalloc;
 
 	leaves = 0;
-	if(useIterations_) {
-		for(size_t i = 0; i < iterations_; i++) {
+	double timePerMove = 300.0/(1+0.25*movesSoFar);
+	std::cout << timePerMove << " time" << std::endl;
+	auto deadline = high_resolution_clock::now() + duration<double>(timePerMove);
+
+	auto t1 = high_resolution_clock::now();
+	montecarlo(ucbs.get(), 0, baseGames_, alloc);
+	auto t2 = high_resolution_clock::now();
+
+	size_t itsCompleted = ucbs[0].plays / 2 / baseGames_;
+
+	while(t2 < deadline) {
+		double itsPerSec = itsCompleted / duration_cast<duration<double>>(t2 - t1).count();
+		itsCompleted = std::max(size_t(1), size_t(itsPerSec * duration_cast<duration<double>>(deadline - t2).count()));
+
+		t1 = high_resolution_clock::now();
+		for(size_t i = 0; i < itsCompleted; i++) {
 			montecarlo(ucbs.get(), 0, baseGames_, alloc);
 		}
-	} else {
-		auto deadline = high_resolution_clock::now() + duration<double>(timePerMove_);
-
-		auto t1 = high_resolution_clock::now();
-		montecarlo(ucbs.get(), 0, baseGames_, alloc);
-		auto t2 = high_resolution_clock::now();
-
-		size_t itsCompleted = ucbs[0].plays / 2 / baseGames_;
-
-		while(t2 < deadline) {
-			double itsPerSec = itsCompleted / duration_cast<duration<double>>(t2 - t1).count();
-			itsCompleted = std::max(size_t(1), size_t(itsPerSec * duration_cast<duration<double>>(deadline - t2).count()));
-
-			t1 = high_resolution_clock::now();
-			for(size_t i = 0; i < itsCompleted; i++) {
-				montecarlo(ucbs.get(), 0, baseGames_, alloc);
-			}
-			t2 = high_resolution_clock::now();
-		}
+		t2 = high_resolution_clock::now();
 	}
-
 	size_t total = 0;
 	for(size_t i = 0; i < len; i++) {
 		if(ucbs[i].plays == 0) total++;
