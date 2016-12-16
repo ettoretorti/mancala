@@ -50,16 +50,19 @@ static inline Side opposite(Side s) {
 }
 
 static std::pair<uint8_t, float> minimaxCheck(size_t movesSoFar, const Board& b, Side s){
+	std::pair<uint8_t, double> result = std::make_pair(DONT_MINAMAX,0.0);
 	if(movesSoFar > 20){
 		Board bCopy = b;
-		std::pair<uint8_t, double> result = minimaxAgent.iterative_deepening(s, bCopy, movesSoFar, 10.0);
+		volatile uint8_t index = 8;
+		volatile double score = 0.0;
+		result = minimaxAgent.iterative_deepening(s, bCopy, movesSoFar, 10.0, index, score);
 		if(s == SOUTH && result.second > 100){
 			return std::make_pair(result.first, 1.0);
 		} else if(s == NORTH && result.second < -100){
 			return std::make_pair(result.first, 1.0);
 		}
 	}
-	return std::make_pair(DONT_MINAMAX,0.0);
+	return result;
 }
 
 FinalAgent::FinalAgent(uint16_t ucbDepth, uint16_t ucbBaseGames, uint32_t iterations)
