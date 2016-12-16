@@ -9,11 +9,15 @@
 #include <memory>
 #include <cmath>
 #include <tuple>
+#include <thread>
+#include <future>
 #include <chrono>
 #include <unordered_map>
 #include <iostream>
 
 static MiniMaxAgent minimaxAgent;
+
+const uint8_t DONT_MINAMAX = 10;
 
 struct UCB {
 	Board board;
@@ -43,6 +47,19 @@ static size_t ipow(size_t base, size_t exp, size_t res = 1) {
 
 static inline Side opposite(Side s) {
 	return (Side)(((int)s) ^ 1);
+}
+
+static std::pair<uint8_t, float> minimaxCheck(size_t movesSoFar, const Board& b, Side s){
+	if(movesSoFar > 20){
+		Board bCopy = b;
+		std::pair<uint8_t, double> result = minimaxAgent.iterative_deepening(s, bCopy, movesSoFar);
+		if(s == SOUTH && result.second > 100){
+			return std::make_pair(result.first, 1.0);
+		} else if(s == NORTH && result.second < -100){
+			return std::make_pair(result.first, 1.0);
+		}
+	}
+	return std::make_pair(DONT_MINAMAX,0.0);
 }
 
 FinalAgent::FinalAgent(uint16_t ucbDepth, uint16_t ucbBaseGames, uint32_t iterations)
@@ -91,16 +108,8 @@ std::pair<uint8_t, float> FinalAgent::makeMoveAndScore(const Board& b, Side s, s
 	if(b.stonesInWell(Side(int(s)^1)) > 49) {
 		return std::make_pair(RandomAgent().makeMove(b, s, movesSoFar, lastMove), 0.0);
 	}
-
-	if(movesSoFar > 20){
-		Board bCopy = b;
-		std::pair<uint8_t, double> result = minimaxAgent.iterative_deepening(s, bCopy, movesSoFar);
-		if(s == SOUTH && result.second > 100){
-			return std::make_pair(result.first, 1.0);
-		} else if(s == NORTH && result.second < -100){
-			return std::make_pair(result.first, 0.0);
-		}
-	}
+	
+	std::future<std::pair<uint8_t, float>> minimaxFuture = std::async(&minimaxCheck, movesSoFar, b, s);
 
 	size_t len = neededSize(depth_);
 	auto ucbs = std::unique_ptr<UCB[]>(new UCB[len]);
@@ -118,7 +127,7 @@ std::pair<uint8_t, float> FinalAgent::makeMoveAndScore(const Board& b, Side s, s
 
 	leaves = 0;
 	double timePerMove = 300.0/(1+0.25*movesSoFar);
-	std::cout << timePerMove << " time" << std::endl;
+	//double timePerMove = 10.0;
 	auto deadline = high_resolution_clock::now() + duration<double>(timePerMove);
 
 	auto t1 = high_resolution_clock::now();
@@ -141,10 +150,6 @@ std::pair<uint8_t, float> FinalAgent::makeMoveAndScore(const Board& b, Side s, s
 	for(size_t i = 0; i < len; i++) {
 		if(ucbs[i].plays == 0) total++;
 	}
-	std::cerr << "len " << len << std::endl;
-	std::cerr << "total " << total << std::endl;
-	std::cerr << "maxidx " << cur << std::endl;
-	std::cerr << "simulations " << leaves << std::endl;
 
 	size_t bestMove = moves[0];
 	double bestScore = -std::numeric_limits<double>::infinity();
@@ -161,7 +166,10 @@ std::pair<uint8_t, float> FinalAgent::makeMoveAndScore(const Board& b, Side s, s
 			bestMove = moves[i];
 		}
 	}
-
+	std::pair<uint8_t, float> minimaxResult = minimaxFuture.get();
+	if(minimaxResult.first != DONT_MINAMAX){
+		return minimaxResult;
+	}
 	return std::make_pair(bestMove, bestScore);
 }
 
