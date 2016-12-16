@@ -13,10 +13,8 @@ static std::unordered_map<Board, double> cache_north = {};
 static std::unordered_map<Board, double> cache_south = {};
 
 static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Board& b, size_t movesSoFar, double alpha, double beta);
+static std::pair<uint8_t,double> iterative_deepening(Side toMove, const Board& b, size_t movesSoFar);
 
-static bool pairCompare(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem);
-static bool pairCompare_minimize(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem);
-static uint8_t iterative_deepening(Side toMove, const Board& b, size_t movesSoFar);
 uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
 	// Swap Logic
 	if(movesSoFar == 0) return 0;
@@ -31,11 +29,15 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_
 		return moves[rand() % nMoves];
 
 	Board bCopy = b;
-	return iterative_deepening(s, bCopy, movesSoFar);
+	return iterative_deepening(s, bCopy, movesSoFar).first;
 }
 
 static inline bool pairCompare(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
   return firstElem.second > secondElem.second;
+}
+
+static inline bool pairCompare_minimize(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
+  return firstElem.second < secondElem.second;
 }
 
 static inline void cacheIt(const Board& b, double val, Side s){
@@ -46,11 +48,7 @@ static inline void cacheIt(const Board& b, double val, Side s){
 		cache_north.insert(std::make_pair(bCopy, val));
 }
 
-static inline bool pairCompare_minimize(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
-  return firstElem.second < secondElem.second;
-}
-
-static uint8_t iterative_deepening(Side toMove, const Board& b, size_t movesSoFar){
+static std::pair<uint8_t,double> iterative_deepening(Side toMove, const Board& b, size_t movesSoFar){
 	uint8_t MAX_DEPTH = 7;
 	std::pair<uint8_t,double> final_result = std::make_pair(8, toMove == SOUTH? -1.0/0.0 : 1.0/0.0);
 
@@ -58,7 +56,7 @@ static uint8_t iterative_deepening(Side toMove, const Board& b, size_t movesSoFa
 		Board bCopy = b;
 		final_result = minimax_alphabeta(depth, toMove, bCopy, movesSoFar, -1.0/0.0, 1.0/0.0);
 	}
-	return final_result.first;
+	return final_result;
 }
 
 /// Returns the heuristic value for south. 0 indicates a draw, positive values an advantage for south, and negative values and advantage for north.
