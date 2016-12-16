@@ -34,11 +34,11 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_
 	return iterative_deepening(s, bCopy, movesSoFar);
 }
 
-static bool pairCompare(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
+static inline bool pairCompare(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
   return firstElem.second > secondElem.second;
 }
 
-static void cacheIt(const Board& b, double val, Side s){
+static inline void cacheIt(const Board& b, double val, Side s){
 	Board bCopy = b;		                             
 	if(s == SOUTH)
 		cache_south.insert(std::make_pair(bCopy, val));
@@ -46,7 +46,7 @@ static void cacheIt(const Board& b, double val, Side s){
 		cache_north.insert(std::make_pair(bCopy, val));
 }
 
-static bool pairCompare_minimize(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
+static inline bool pairCompare_minimize(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
   return firstElem.second < secondElem.second;
 }
 
