@@ -34,9 +34,16 @@ static std::pair<uint8_t, float> monteCarloPar(Board b, Side s, size_t movesSoFa
 uint8_t SavageAgent::makeMove(const Board& b, Side side, size_t movesSoFar, uint8_t lastMove) {
 	using namespace std;
 
+	// Swap Logic
+	if(movesSoFar == 0) return 1;
+	if(movesSoFar == 1 && (lastMove == 1 || lastMove == 2 ||  lastMove == 3 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return 7;
+	
+	// Opening table
+
 	double timeForThisMove = 5.0; //300.0/(1.0 + 0.25 * movesSoFar);
 	std::cerr << "gonna run for " << timeForThisMove << std::endl;
-	
+
+	// Spawn minimax thread
 	future<pair<uint8_t, float>> mmFuture;
 	volatile uint8_t mmMove;
 	volatile double mmScore;
@@ -56,6 +63,8 @@ uint8_t SavageAgent::makeMove(const Board& b, Side side, size_t movesSoFar, uint
 	const auto* moves = b.validMoves(side, nMoves);
 	std::cerr << "GONNA SPAWN THREADS FOR " << nMoves << std::endl;
 
+
+	//Spawn MC threads
 	future<pair<uint8_t, float>> results[7];
 	bool ga[7];
 	for(size_t i = 0; i < nMoves; i++) {
@@ -73,8 +82,9 @@ uint8_t SavageAgent::makeMove(const Board& b, Side side, size_t movesSoFar, uint
 		std::cerr << "SPAWNED THREAD " << i << std::endl;
 	}
 
+
+	// Best MC option
 	pair<uint8_t, float> best = make_pair(0, -1.0);
-	
 	for(size_t i = 0; i < nMoves; i++) {
 		auto cur = results[i].get();
 		if(!ga[i]) cur.second = 1.0 - cur.second;
@@ -85,10 +95,12 @@ uint8_t SavageAgent::makeMove(const Board& b, Side side, size_t movesSoFar, uint
 		}
 	}
 
-	// Waiting
+	// Waiting for MM
 	auto mmRes = mmFuture.get();
-
+	
+	// Guaranteed win
 	if(mmRes.second > 100000.0) {
+		std::cerr << "GUARANTEED WIN " << std::endl;
 		return mmRes.first;
 	}
 

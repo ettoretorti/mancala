@@ -77,9 +77,9 @@ static size_t leaves = 0;
 std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
 	using namespace std::chrono;
 
-	// look at notes/WHEN_TO_PIE for details
-	if(movesSoFar == 0) return std::make_pair(0, 492.5/507.5);
-	if(movesSoFar == 1 && (lastMove == 1 || lastMove == 3 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return std::make_pair(7, 0.5);
+	// Swap Logic
+	if(movesSoFar == 0) return std::make_pair(0, 0.5);
+	if(movesSoFar == 1 && (lastMove == 1 || lastMove == 2 ||  lastMove == 3 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return std::make_pair(7, 0.5);
 
 	// instant win/loss
 	if(b.stonesInWell(s) > 49) {

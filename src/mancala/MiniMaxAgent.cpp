@@ -16,8 +16,8 @@ std::pair<uint8_t,double> iterative_deepening(Side toMove, const Board& b, size_
 
 uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
 	// Swap Logic
-	if(movesSoFar == 0) return 0;
-	if(movesSoFar == 1 && (lastMove == 1 || lastMove == 3 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return 7;
+	if(movesSoFar == 0) return 1;
+	if(movesSoFar == 1 && (lastMove == 1 || lastMove == 2 ||  lastMove == 3 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return 7;
 
 	size_t nMoves;
 	auto* moves = b.validMoves(s, nMoves);
