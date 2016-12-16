@@ -52,7 +52,7 @@ static inline Side opposite(Side s) {
 static std::pair<uint8_t, float> minimaxCheck(size_t movesSoFar, const Board& b, Side s){
 	if(movesSoFar > 20){
 		Board bCopy = b;
-		std::pair<uint8_t, double> result = minimaxAgent.iterative_deepening(s, bCopy, movesSoFar);
+		std::pair<uint8_t, double> result = minimaxAgent.iterative_deepening(s, bCopy, movesSoFar, 10.0);
 		if(s == SOUTH && result.second > 100){
 			return std::make_pair(result.first, 1.0);
 		} else if(s == NORTH && result.second < -100){

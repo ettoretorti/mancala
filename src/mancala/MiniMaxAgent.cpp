@@ -12,7 +12,7 @@
 
 static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Board& b, size_t movesSoFar, double alpha, double beta,
 													std::unordered_map<Board, double> cache_north, std::unordered_map<Board, double> cache_south);
-std::pair<uint8_t,double> iterative_deepening(Side toMove, const Board& b, size_t movesSoFar);
+std::pair<uint8_t,double> iterative_deepening(Side toMove, const Board& b, size_t movesSoFar, double time);
 
 uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
 	// Swap Logic
@@ -28,7 +28,7 @@ uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_
 		return moves[rand() % nMoves];
 
 	Board bCopy = b;
-	return iterative_deepening(s, bCopy, movesSoFar).first;
+	return iterative_deepening(s, bCopy, movesSoFar, 10.0).first;
 }
 
 static inline bool pairCompare(const std::pair<uint8_t, double>& firstElem, const std::pair<uint8_t, double>& secondElem) {
@@ -47,17 +47,15 @@ static inline void cacheIt(const Board& b, double val, Side s, std::unordered_ma
 		cache_north.insert(std::make_pair(bCopy, val));
 }
 
-std::pair<uint8_t,double> MiniMaxAgent::iterative_deepening(Side toMove, const Board& b, size_t movesSoFar){
+std::pair<uint8_t,double> MiniMaxAgent::iterative_deepening(Side toMove, const Board& b, size_t movesSoFar, double time){
 	std::unordered_map<Board, double> cache_north = {};
 	std::unordered_map<Board, double> cache_south = {};
 
 	uint8_t CURRENT_DEPTH = 6;
 	std::pair<uint8_t,double> final_result = std::make_pair(8, toMove == SOUTH? -1.0/0.0 : 1.0/0.0);
 
-	double timeForMinimax = 10.0;
-
 	auto current = std::chrono::high_resolution_clock::now();
-	auto deadline = current + std::chrono::duration<double>(timeForMinimax);
+	auto deadline = current + std::chrono::duration<double>(time);
 	
 	while(current < deadline){
 		Board bCopy = b;
