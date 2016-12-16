@@ -51,7 +51,7 @@ static inline void cacheIt(const Board& b, double val, Side s, std::unordered_ma
 }
 
 std::pair<uint8_t,double> MiniMaxAgent::iterative_deepening(Side toMove, const Board& b,
-																size_t movesSoFar, double time, volatile uint8_t index, volatile double score){
+																size_t movesSoFar, double time, volatile uint8_t& index, volatile double& score){
 	std::unordered_map<Board, double> cache_north = {};
 	std::unordered_map<Board, double> cache_south = {};
 
