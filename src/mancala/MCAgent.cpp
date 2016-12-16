@@ -20,34 +20,16 @@ struct UCB {
 	Side whosTurn;
 };
 
-static inline size_t childIdx(size_t idx, size_t move) {
-	return 7 * idx + move + 1;
-}
-
-static size_t neededSize(int depth) {
-	size_t initial = 0;
-
-	for(int i = 0; i < depth - 1; i++) {
-		initial = childIdx(initial, 6);
-	}
-
-	return initial + 1;
-}
-
-size_t ipow(size_t base, size_t exp, size_t res = 1) {
-	return exp == 0 ? res : ipow(base, exp-1, res * base);
-}
-
 static inline Side opposite(Side s) {
 	return (Side)(((int)s) ^ 1);
 }
 
-MCAgent::MCAgent(uint16_t ucbDepth, uint16_t ucbBaseGames, uint32_t iterations)
-	: depth_(ucbDepth), baseGames_(ucbBaseGames), iterations_(iterations), timePerMove_(1.0), useIterations_(true)
+MCAgent::MCAgent(uint32_t bufSize, uint16_t ucbBaseGames, uint32_t iterations)
+	: bufSize_(bufSize), baseGames_(ucbBaseGames), iterations_(iterations), timePerMove_(1.0), useIterations_(true)
 {}
 
-uint16_t& MCAgent::depth() {
-	return depth_;
+uint32_t& MCAgent::bufferSize() {
+	return bufSize_;
 }
 
 uint16_t& MCAgent::baseGames() {
@@ -89,7 +71,7 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 		return std::make_pair(RandomAgent().makeMove(b, s, movesSoFar, lastMove), 0.0);
 	}
 
-	size_t len = neededSize(depth_);
+	size_t len = bufSize_;
 	auto ucbs = std::unique_ptr<UCB[]>(new UCB[len]);
 
 	size_t nMoves;

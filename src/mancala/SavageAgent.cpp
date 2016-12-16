@@ -2,6 +2,7 @@
 
 #include "MCAgent.hpp"
 #include "MiniMaxAgent.hpp"
+#include "books.hpp"
 
 #include <future>
 #include <thread>
@@ -24,7 +25,7 @@ static std::pair<uint8_t, float> minimaxCheck(size_t movesSoFar, Board b, Side s
 }
 
 static std::pair<uint8_t, float> monteCarloPar(Board b, Side s, size_t movesSoFar, uint8_t lastMove, double time) {
-	MCAgent mc(7, 1, 1);
+	MCAgent mc(50000000, 1, 1);
 	mc.useIterations() = false;
 	mc.timePerMove() = time;
 	
@@ -39,9 +40,20 @@ uint8_t SavageAgent::makeMove(const Board& b, Side side, size_t movesSoFar, uint
 	if(movesSoFar == 1 && (lastMove == 1 || lastMove == 2 ||  lastMove == 3 || lastMove == 4 || lastMove == 5 || lastMove == 6)) return 7;
 	
 	// Opening table
+	if(movesSoFar < 4) {
+		auto& table = side == SOUTH ? books::southBook() : books::northBook();
+		auto it = table.find(b);
 
-	double timeForThisMove = 5.0; //300.0/(1.0 + 0.25 * movesSoFar);
-	std::cerr << "gonna run for " << timeForThisMove << std::endl;
+		if(it != table.end()) {
+			std::cerr << "USING BOOK" << std::endl;
+			return it->second;
+		} else {
+			std::cerr << "BIG FUCKING PROBLEM" << std::endl;
+		}
+	}
+
+	double timeForThisMove = std::min(30.0, 300.0/(1.0 + 0.25 * movesSoFar));
+	double timeForMM = std::max(10.0, std::min(25.0, 0.571428 * timeForThisMove));
 
 	// Spawn minimax thread
 	future<pair<uint8_t, float>> mmFuture;
@@ -53,15 +65,13 @@ uint8_t SavageAgent::makeMove(const Board& b, Side side, size_t movesSoFar, uint
 		std::packaged_task<pair<uint8_t,float>(size_t, Board, Side, double, function<void(uint8_t, double)>)>
 			mmTask(minimaxCheck);
 		mmFuture = mmTask.get_future();
-		thread t(std::move(mmTask), movesSoFar, b, side, 10.0, updater);
+		thread t(std::move(mmTask), movesSoFar, b, side, timeForMM, updater);
 		t.detach();
-		std::cerr << "started minimax" << std::endl;
 	}
 
 
 	size_t nMoves;
 	const auto* moves = b.validMoves(side, nMoves);
-	std::cerr << "GONNA SPAWN THREADS FOR " << nMoves << std::endl;
 
 
 	//Spawn MC threads
@@ -79,9 +89,7 @@ uint8_t SavageAgent::makeMove(const Board& b, Side side, size_t movesSoFar, uint
 		thread t(std::move(mcTask), cpy, ga[i] ? side : Side(int(side)^1), movesSoFar, moves[i], timeForThisMove);
 		t.detach();
 
-		std::cerr << "SPAWNED THREAD " << i << std::endl;
 	}
-
 
 	// Best MC option
 	pair<uint8_t, float> best = make_pair(0, -1.0);
@@ -100,7 +108,7 @@ uint8_t SavageAgent::makeMove(const Board& b, Side side, size_t movesSoFar, uint
 	
 	// Guaranteed win
 	if(mmRes.second > 100000.0) {
-		std::cerr << "GUARANTEED WIN " << std::endl;
+		std::cerr << "GUARANTEED WIN" << std::endl;
 		return mmRes.first;
 	}
 
