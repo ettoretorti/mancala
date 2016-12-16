@@ -33,13 +33,13 @@ public:
 
 private:
 	//This totals out to 32 bytes (EXACTLY HALF A CACHE LINE)
-	uint8_t sHoles_[7];
 	uint8_t nHoles_[7];
+	uint8_t sHoles_[7];
 	uint8_t sScore_;
 	uint8_t nScore_;
 
-	uint8_t sMoves_[7];
 	uint8_t nMoves_[7];
+	uint8_t sMoves_[7];
 	uint8_t noNMoves_;
 	uint8_t noSMoves_;
 
