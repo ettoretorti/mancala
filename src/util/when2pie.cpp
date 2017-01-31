@@ -1,7 +1,5 @@
 #include <mancala/Board.hpp>
 #include <mancala/Game.hpp>
-#include <mancala/RandomAgent.hpp>
-#include <mancala/FinalAgent.hpp>
 #include <mancala/MCAgent.hpp>
 
 #include <iostream>
@@ -9,7 +7,7 @@
 constexpr uint64_t GAMES_PER_CHUNK = 1ull;
 constexpr uint64_t CHUNKS_PER_MOVE = 4ull;
 
-static thread_local Game g(new FinalAgent(), new FinalAgent());
+static thread_local Game g(new MCAgent(), new MCAgent());
 
 int main() {
 	Board boards[7];
