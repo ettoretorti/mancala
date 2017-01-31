@@ -8,10 +8,9 @@
 #include <vector>
 #include <algorithm>
 #include <chrono>
-#include <unordered_map>
 
 static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, Side s, Board& b, size_t movesSoFar, double alpha, double beta,
-													std::unordered_map<Board, double> cache_north, std::unordered_map<Board, double> cache_south);
+													MiniMaxAgent::MoveCache& cache_north, MiniMaxAgent::MoveCache& cache_south);
 std::pair<uint8_t,double> iterative_deepening(Side toMove, const Board& b, size_t movesSoFar, double time);
 
 uint8_t MiniMaxAgent::makeMove(const Board& b, Side s, size_t movesSoFar, uint8_t lastMove) {
@@ -41,7 +40,7 @@ static inline bool pairCompare_minimize(const std::pair<uint8_t, double>& firstE
   return firstElem.second < secondElem.second;
 }
 
-static inline void cacheIt(const Board& b, double val, Side s, std::unordered_map<Board, double> cache_north, std::unordered_map<Board, double> cache_south){
+static inline void cacheIt(const Board& b, double val, Side s, MiniMaxAgent::MoveCache& cache_north, MiniMaxAgent::MoveCache& cache_south){
 	Board bCopy = b;		                             
 	if(s == SOUTH)
 		cache_south.insert(std::make_pair(bCopy, val));
@@ -51,8 +50,8 @@ static inline void cacheIt(const Board& b, double val, Side s, std::unordered_ma
 
 std::pair<uint8_t,double> MiniMaxAgent::iterative_deepening(Side toMove, const Board& b,
 																size_t movesSoFar, double time, std::function<void(uint8_t, double)> up){
-	std::unordered_map<Board, double> cache_north = {};
-	std::unordered_map<Board, double> cache_south = {};
+	MiniMaxAgent::MoveCache cache_north = {};
+	MiniMaxAgent::MoveCache cache_south = {};
 
 	uint8_t CURRENT_DEPTH = 6;
 	std::pair<uint8_t,double> final_result = std::make_pair(8, toMove == SOUTH? -1.0/0.0 : 1.0/0.0);
@@ -137,7 +136,7 @@ static inline double jimmy_heuristic(const Board& b, Side s) {
 }
 
 static std::pair<uint8_t,double> minimax_alphabeta(uint8_t depth, const Side toMove, Board& b, size_t movesSoFar, double alpha,	
-													double beta, std::unordered_map<Board, double> cache_north, std::unordered_map<Board, double> cache_south){
+													double beta, MiniMaxAgent::MoveCache& cache_north, MiniMaxAgent::MoveCache& cache_south){
 	size_t nMoves;
 	auto* moves = b.validMoves(toMove, nMoves);
 
