@@ -139,7 +139,7 @@ std::pair<uint8_t, float> MCAgent::makeMoveAndScore(const Board& b, Side s, size
 	return std::make_pair(bestMove, bestScore);
 }
 
-// This is hacky as fuck, but will do for now
+// This is hacky, but will do for now
 static thread_local Game g(new RandomAgent, new RandomAgent);
 
 static std::tuple<uint32_t, uint32_t> randomPlayouts(const Board& b, Side toMove, size_t games) {

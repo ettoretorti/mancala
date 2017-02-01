@@ -48,7 +48,7 @@ uint8_t SavageAgent::makeMove(const Board& b, Side side, size_t movesSoFar, uint
 			std::cerr << "USING BOOK" << std::endl;
 			return it->second;
 		} else {
-			std::cerr << "BIG FUCKING PROBLEM" << std::endl;
+			std::cerr << "BIG PROBLEM" << std::endl;
 		}
 	}
 
