@@ -3,6 +3,7 @@
 #include <mancala/Board.hpp>
 #include <mancala/RandomAgent.hpp>
 #include <mancala/MCAgent.hpp>
+#include <mancala/SavageAgent.hpp>
 
 #include <memory>
 #include <iostream>
@@ -11,7 +12,7 @@ int main() {
 	using namespace std;
 	using namespace input;
 
-	auto agent = std::unique_ptr<MCAgent>(new MCAgent());
+	auto agent = std::unique_ptr<Agent>(new SavageAgent());
 	//agent->useIterations() = false;
 	//agent->timePerMove() = 2.0;
 
